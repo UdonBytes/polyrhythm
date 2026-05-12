@@ -432,3 +432,11 @@ if st.button("Generate"):
         measure_seconds,
         "rhythm_test.wav",
     )
+
+    with open("rhythm_test.wav", "rb") as audio_file:
+        st.download_button(
+            label="Download WAV",
+            data=audio_file,
+            file_name="polyrhythm.wav",
+            mime="audio/wav",
+        )
