@@ -384,8 +384,31 @@ def show_polyrhythm_clock(
 
         return lines
 
+    def overlap_markers():
+        markers = ""
+        high_angles = set()
+
+        for i in range(high_beats):
+            high_angles.add(round(i * 360 / high_beats, 6))
+
+        for i in range(low_beats):
+            angle = round(i * 360 / low_beats, 6)
+
+            if angle in high_angles:
+                x, y = clock_point(angle, 112)
+                markers += f"""
+                <g class="overlap-marker">
+                    <circle cx="{x:.2f}" cy="{y:.2f}" r="10" fill="#2E86AB" />
+                    <circle cx="{x:.2f}" cy="{y:.2f}" r="6" fill="#C44536" />
+                    <circle cx="{x:.2f}" cy="{y:.2f}" r="10" fill="none" stroke="#111111" stroke-width="2" />
+                </g>
+                """
+
+        return markers
+
     high_lines = division_lines(high_beats, "#C44536", "high-clock", 24, 82)
     low_lines = division_lines(low_beats, "#2E86AB", "low-clock", 96, 132)
+    shared_hit_markers = overlap_markers()
 
     html = f"""
     <style>
@@ -432,6 +455,10 @@ def show_polyrhythm_clock(
             opacity: 0.75;
         }}
 
+        .overlap-marker {{
+            pointer-events: none;
+        }}
+
         .clock-hand {{
             stroke: #111111;
             stroke-width: 4;
@@ -472,6 +499,10 @@ def show_polyrhythm_clock(
 
         .blue {{
             background: #2E86AB;
+        }}
+
+        .overlap {{
+            background: linear-gradient(90deg, #C44536 0 50%, #2E86AB 50% 100%);
         }}
 
         .loop-note {{
@@ -520,6 +551,7 @@ def show_polyrhythm_clock(
                 <circle cx="150" cy="150" r="98" fill="none" stroke="#eeeeee" stroke-width="1" />
                 {high_lines}
                 {low_lines}
+                {shared_hit_markers}
                 <line id="clock-hand" class="clock-hand" x1="150" y1="150" x2="150" y2="34" />
                 <circle class="clock-center" cx="150" cy="150" r="7" />
             </svg>
@@ -527,6 +559,7 @@ def show_polyrhythm_clock(
                 <div class="legend-item"><span class="legend-swatch black"></span> Black hand = measure position</div>
                 <div class="legend-item"><span class="legend-swatch red"></span> Red inner ring = high rhythm</div>
                 <div class="legend-item"><span class="legend-swatch blue"></span> Blue outer ring = low rhythm</div>
+                <div class="legend-item"><span class="legend-swatch overlap"></span> Bullseye = shared hit</div>
             </div>
         </div>
         <div class="loop-note">
