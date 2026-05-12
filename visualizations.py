@@ -362,6 +362,7 @@ def show_polyrhythm_clock(
 
     def division_lines(number_of_beats, color, rhythm_name):
         lines = ""
+        stroke_width = 7 if rhythm_name == "low-clock" else 4
 
         for i in range(number_of_beats):
             angle = i * 360 / number_of_beats
@@ -378,14 +379,15 @@ def show_polyrhythm_clock(
                 x2="{x2:.2f}"
                 y2="{y2:.2f}"
                 stroke="{color}"
+                stroke-width="{stroke_width}"
                 data-beat-time="{beat_time}"
             />
             """
 
         return lines
 
-    high_lines = division_lines(high_beats, "#C44536", "high-clock")
     low_lines = division_lines(low_beats, "#2E86AB", "low-clock")
+    high_lines = division_lines(high_beats, "#C44536", "high-clock")
 
     html = f"""
     <style>
@@ -418,7 +420,6 @@ def show_polyrhythm_clock(
         }}
 
         .division-tick {{
-            stroke-width: 4;
             stroke-linecap: round;
             transition: stroke-width 0.08s ease, opacity 0.08s ease;
         }}
@@ -426,6 +427,7 @@ def show_polyrhythm_clock(
         .downbeat-tick {{
             stroke: #111111;
             stroke-width: 7;
+            opacity: 0.85;
         }}
 
         .active-tick {{
