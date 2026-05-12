@@ -1,6 +1,9 @@
+import base64
+
 import numpy as np
 import soundfile as sf
 import streamlit as st
+import streamlit.components.v1 as components
 
 
 def add_sound(track, sound, start_time, sample_rate):
@@ -12,6 +15,252 @@ def add_sound(track, sound, start_time, sample_rate):
         sound = sound[:end_index - start_index]
 
     track[start_index:end_index] += sound
+
+
+def make_beat_markers(number_of_beats, beats_per_measure):
+    """Return beat marker positions as percentages across the measure."""
+    beat_spacing = beats_per_measure / number_of_beats
+    beat_positions = []
+
+    for i in range(number_of_beats):
+        beat_position = i * beat_spacing
+        beat_percent = beat_position / beats_per_measure * 100
+        beat_positions.append(beat_percent)
+
+    return beat_positions
+
+
+def draw_animated_timeline(
+    high_beats,
+    low_beats,
+    beats_per_measure,
+    measure_seconds,
+    audio_file_name,
+):
+    """Draw an animated timeline with a playhead synced to the audio player."""
+    high_markers = make_beat_markers(high_beats, beats_per_measure)
+    low_markers = make_beat_markers(low_beats, beats_per_measure)
+
+    with open(audio_file_name, "rb") as audio_file:
+        audio_base64 = base64.b64encode(audio_file.read()).decode()
+
+    def marker_html(positions, row_name):
+        html = ""
+
+        for position in positions:
+            beat_time = position / 100 * measure_seconds
+            downbeat_class = " downbeat-marker" if position == 0 else ""
+            html += f"""
+            <span
+                class="beat-marker {row_name}{downbeat_class}"
+                style="left: {position}%;"
+                data-beat-time="{beat_time}"
+            ></span>
+            """
+
+        return html
+
+    beat_lines_html = ""
+
+    for beat in range(beats_per_measure + 1):
+        beat_percent = beat / beats_per_measure * 100
+        downbeat_class = " downbeat-line" if beat == 0 else ""
+        beat_lines_html += f"""
+        <span
+            class="beat-line{downbeat_class}"
+            style="left: {beat_percent}%;"
+        ></span>
+        """
+
+    html = f"""
+    <style>
+        .timeline-wrapper {{
+            font-family: sans-serif;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            color: #f5f5f5;
+        }}
+
+        .timeline-title {{
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }}
+
+        .timeline {{
+            position: relative;
+            height: 180px;
+            border: 1px solid #dddddd;
+            border-radius: 8px;
+            background: #ffffff;
+            overflow: hidden;
+        }}
+
+        .beat-line {{
+            position: absolute;
+            top: 24px;
+            bottom: 24px;
+            width: 1px;
+            background: #dddddd;
+        }}
+
+        .downbeat-line {{
+            width: 3px;
+            background: #111111;
+        }}
+
+        .rhythm-row {{
+            position: absolute;
+            left: 90px;
+            right: 24px;
+            height: 50px;
+            border-top: 1px solid #999999;
+        }}
+
+        .high-row {{
+            top: 58px;
+        }}
+
+        .low-row {{
+            top: 118px;
+        }}
+
+        .row-label {{
+            position: absolute;
+            left: 16px;
+            width: 64px;
+            font-size: 13px;
+            color: #333333;
+        }}
+
+        .high-label {{
+            top: 48px;
+        }}
+
+        .low-label {{
+            top: 108px;
+        }}
+
+        .beat-marker {{
+            position: absolute;
+            top: -10px;
+            width: 20px;
+            height: 20px;
+            transform: translateX(-50%);
+            border: 2px solid #111111;
+            border-radius: 50%;
+            transition: transform 0.08s ease, box-shadow 0.08s ease;
+        }}
+
+        .high {{
+            background: #2E86AB;
+        }}
+
+        .low {{
+            background: #C44536;
+        }}
+
+        .downbeat-marker {{
+            width: 28px;
+            height: 28px;
+            top: -14px;
+            border-width: 3px;
+        }}
+
+        .active-marker {{
+            transform: translateX(-50%) scale(1.35);
+            box-shadow: 0 0 0 5px rgba(17, 17, 17, 0.15);
+        }}
+
+        .playhead {{
+            position: absolute;
+            top: 20px;
+            bottom: 20px;
+            left: 90px;
+            width: 3px;
+            background: #111111;
+        }}
+
+        .loop-note {{
+            margin-top: 0.5rem;
+            color: #cfcfcf;
+            font-size: 13px;
+        }}
+
+        audio {{
+            width: 100%;
+            margin-top: 0.9rem;
+        }}
+    </style>
+
+    <div class="timeline-wrapper">
+        <div class="timeline-title">Animated rhythm timeline</div>
+        <div class="timeline" id="rhythm-timeline">
+            <div class="row-label high-label">High</div>
+            <div class="row-label low-label">Low</div>
+            <div class="rhythm-row high-row">
+                {beat_lines_html}
+                {marker_html(high_markers, "high")}
+            </div>
+            <div class="rhythm-row low-row">
+                {beat_lines_html}
+                {marker_html(low_markers, "low")}
+            </div>
+            <div class="playhead"></div>
+        </div>
+        <div class="loop-note">
+            Press play to hear the rhythm and watch the playhead follow the beat.
+        </div>
+        <audio id="rhythm-audio" controls src="data:audio/wav;base64,{audio_base64}"></audio>
+    </div>
+
+    <script>
+        const audio = document.getElementById("rhythm-audio");
+        const timeline = document.getElementById("rhythm-timeline");
+        const playhead = document.querySelector(".playhead");
+        const markers = document.querySelectorAll(".beat-marker");
+        const measureSeconds = {measure_seconds};
+        let animationFrameId = null;
+
+        function updateTimeline() {{
+            const measureTime = audio.currentTime % measureSeconds;
+            const measurePercent = measureTime / measureSeconds;
+            const timelineWidth = timeline.clientWidth;
+            const leftEdge = 90;
+            const rightEdge = 24;
+            const playableWidth = timelineWidth - leftEdge - rightEdge;
+
+            playhead.style.left = leftEdge + measurePercent * playableWidth + "px";
+
+            markers.forEach(function(marker) {{
+                const beatTime = Number(marker.dataset.beatTime);
+                const distance = Math.abs(measureTime - beatTime);
+                const wrappedDistance = Math.min(distance, measureSeconds - distance);
+
+                if (wrappedDistance < 0.06) {{
+                    marker.classList.add("active-marker");
+                }} else {{
+                    marker.classList.remove("active-marker");
+                }}
+            }});
+
+            if (!audio.paused && !audio.ended) {{
+                animationFrameId = requestAnimationFrame(updateTimeline);
+            }}
+        }}
+
+        audio.addEventListener("play", updateTimeline);
+        audio.addEventListener("pause", updateTimeline);
+        audio.addEventListener("seeked", updateTimeline);
+        audio.addEventListener("ended", function() {{
+            cancelAnimationFrame(animationFrameId);
+            updateTimeline();
+        }});
+
+        updateTimeline();
+    </script>
+    """
+
+    components.html(html, height=320)
 
 
 st.title("Polyrhythm Generator")
@@ -74,4 +323,10 @@ if st.button("Generate"):
     sf.write("rhythm_test.wav", track, sample_rate)
 
     st.success("Done!")
-    st.audio("rhythm_test.wav")
+    draw_animated_timeline(
+        high_beats,
+        low_beats,
+        beats_per_measure,
+        measure_seconds,
+        "rhythm_test.wav",
+    )
