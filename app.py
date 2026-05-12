@@ -186,9 +186,28 @@ def draw_animated_timeline(
             font-size: 13px;
         }}
 
-        audio {{
-            width: 100%;
+        .audio-controls {{
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             margin-top: 0.9rem;
+        }}
+
+        .play-button {{
+            border: 0;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #111111;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 700;
+            min-width: 88px;
+            padding: 0.6rem 1rem;
+        }}
+
+        .time-label {{
+            color: #cfcfcf;
+            font-size: 14px;
         }}
     </style>
 
@@ -210,19 +229,71 @@ def draw_animated_timeline(
         <div class="loop-note">
             Press play to hear the rhythm and watch the playhead follow the beat.
         </div>
-        <audio id="rhythm-audio" controls loop src="data:audio/wav;base64,{audio_base64}"></audio>
+        <div class="audio-controls">
+            <button class="play-button" id="play-button">Play</button>
+            <span class="time-label" id="time-label">0:00</span>
+        </div>
     </div>
 
     <script>
-        const audio = document.getElementById("rhythm-audio");
         const timeline = document.getElementById("rhythm-timeline");
         const playhead = document.querySelector(".playhead");
         const markers = document.querySelectorAll(".beat-marker");
+        const playButton = document.getElementById("play-button");
+        const timeLabel = document.getElementById("time-label");
         const measureSeconds = {measure_seconds};
+        const audioBase64 = "{audio_base64}";
+        const audioContext = new AudioContext();
+        let audioBuffer = null;
+        let source = null;
+        let isPlaying = false;
+        let startedAt = 0;
+        let pausedAt = 0;
         let animationFrameId = null;
 
+        function base64ToArrayBuffer(base64) {{
+            const binaryString = window.atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+
+            for (let i = 0; i < binaryString.length; i++) {{
+                bytes[i] = binaryString.charCodeAt(i);
+            }}
+
+            return bytes.buffer;
+        }}
+
+        async function loadAudioBuffer() {{
+            if (audioBuffer === null) {{
+                const audioData = base64ToArrayBuffer(audioBase64);
+                audioBuffer = await audioContext.decodeAudioData(audioData);
+            }}
+
+            return audioBuffer;
+        }}
+
+        function getPlaybackTime() {{
+            if (audioBuffer === null) {{
+                return 0;
+            }}
+
+            if (isPlaying) {{
+                return (audioContext.currentTime - startedAt) % audioBuffer.duration;
+            }}
+
+            return pausedAt;
+        }}
+
+        function formatTime(seconds) {{
+            const wholeSeconds = Math.floor(seconds);
+            const minutes = Math.floor(wholeSeconds / 60);
+            const remainingSeconds = wholeSeconds % 60;
+
+            return minutes + ":" + String(remainingSeconds).padStart(2, "0");
+        }}
+
         function updateTimeline() {{
-            const measureTime = audio.currentTime % measureSeconds;
+            const playbackTime = getPlaybackTime();
+            const measureTime = playbackTime % measureSeconds;
             const measurePercent = measureTime / measureSeconds;
             const timelineWidth = timeline.clientWidth;
             const leftEdge = 90;
@@ -230,6 +301,7 @@ def draw_animated_timeline(
             const playableWidth = timelineWidth - leftEdge - rightEdge;
 
             playhead.style.left = leftEdge + measurePercent * playableWidth + "px";
+            timeLabel.textContent = formatTime(playbackTime);
 
             markers.forEach(function(marker) {{
                 const beatTime = Number(marker.dataset.beatTime);
@@ -243,17 +315,47 @@ def draw_animated_timeline(
                 }}
             }});
 
-            if (!audio.paused && !audio.ended) {{
+            if (isPlaying) {{
                 animationFrameId = requestAnimationFrame(updateTimeline);
             }}
         }}
 
-        audio.addEventListener("play", updateTimeline);
-        audio.addEventListener("pause", updateTimeline);
-        audio.addEventListener("seeked", updateTimeline);
-        audio.addEventListener("ended", function() {{
+        async function playLoop() {{
+            await audioContext.resume();
+            const buffer = await loadAudioBuffer();
+
+            source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.loop = true;
+            source.connect(audioContext.destination);
+            source.start(0, pausedAt);
+
+            startedAt = audioContext.currentTime - pausedAt;
+            isPlaying = true;
+            playButton.textContent = "Pause";
+            updateTimeline();
+        }}
+
+        function pauseLoop() {{
+            if (source !== null) {{
+                source.stop();
+                source.disconnect();
+                source = null;
+            }}
+
+            pausedAt = getPlaybackTime();
+            isPlaying = false;
+            playButton.textContent = "Play";
             cancelAnimationFrame(animationFrameId);
             updateTimeline();
+        }}
+
+        playButton.addEventListener("click", async function() {{
+            if (isPlaying) {{
+                pauseLoop();
+            }} else {{
+                await playLoop();
+            }}
         }});
 
         updateTimeline();
