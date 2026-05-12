@@ -14,6 +14,7 @@ https://polyrhythm-generator.streamlit.app/
 * Accented downbeats
 * Seamless looping playback
 * Animated beat timeline
+* Polyrhythm clock visualization
 * WAV download
 
 ## How to Run
