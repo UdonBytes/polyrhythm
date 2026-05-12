@@ -384,8 +384,8 @@ def show_polyrhythm_clock(
 
         return lines
 
-    high_lines = division_lines(high_beats, "#C44536", "high-clock", 62, 98)
-    low_lines = division_lines(low_beats, "#2E86AB", "low-clock", 98, 132)
+    high_lines = division_lines(high_beats, "#C44536", "high-clock", 0, 132)
+    low_lines = division_lines(low_beats, "#2E86AB", "low-clock", 0, 132)
 
     html = f"""
     <style>
@@ -519,15 +519,15 @@ def show_polyrhythm_clock(
             <svg class="clock-face" viewBox="0 0 300 300" aria-label="Polyrhythm clock">
                 <circle cx="150" cy="150" r="132" fill="#fafafa" stroke="#dddddd" stroke-width="2" />
                 <circle cx="150" cy="150" r="98" fill="none" stroke="#eeeeee" stroke-width="1" />
-                {high_lines}
                 {low_lines}
+                {high_lines}
                 <line id="clock-hand" class="clock-hand" x1="150" y1="150" x2="150" y2="34" />
                 <circle class="clock-center" cx="150" cy="150" r="7" />
             </svg>
             <div class="clock-legend">
                 <div class="legend-item"><span class="legend-swatch black"></span> Black hand = measure position</div>
-                <div class="legend-item"><span class="legend-swatch red"></span> Red inner ticks = high rhythm</div>
-                <div class="legend-item"><span class="legend-swatch blue"></span> Blue outer ticks = low rhythm</div>
+                <div class="legend-item"><span class="legend-swatch red"></span> Red lines = high rhythm</div>
+                <div class="legend-item"><span class="legend-swatch blue"></span> Blue lines = low rhythm</div>
             </div>
         </div>
         <div class="loop-note">
