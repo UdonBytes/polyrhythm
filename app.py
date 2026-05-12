@@ -2,7 +2,7 @@ import streamlit as st
 
 from audio import generate_polyrhythm_audio
 from rhythm import get_measure_seconds
-from timeline import show_animated_timeline, show_polyrhythm_clock
+from visualizations import show_animated_timeline, show_polyrhythm_clock
 
 
 BEATS_PER_MEASURE = 4
