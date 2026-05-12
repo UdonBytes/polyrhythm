@@ -360,13 +360,13 @@ def show_polyrhythm_clock(
 
         return x, y
 
-    def division_lines(number_of_beats, color, rhythm_name):
+    def division_lines(number_of_beats, color, rhythm_name, inner_radius, outer_radius):
         lines = ""
 
         for i in range(number_of_beats):
             angle = i * 360 / number_of_beats
-            x1, y1 = clock_point(angle, 98)
-            x2, y2 = clock_point(angle, 132)
+            x1, y1 = clock_point(angle, inner_radius)
+            x2, y2 = clock_point(angle, outer_radius)
             beat_time = i * measure_seconds / number_of_beats
             downbeat_class = " downbeat-tick" if i == 0 else ""
 
@@ -384,8 +384,8 @@ def show_polyrhythm_clock(
 
         return lines
 
-    high_lines = division_lines(high_beats, "#C44536", "high-clock")
-    low_lines = division_lines(low_beats, "#2E86AB", "low-clock")
+    high_lines = division_lines(high_beats, "#C44536", "high-clock", 62, 98)
+    low_lines = division_lines(low_beats, "#2E86AB", "low-clock", 98, 132)
 
     html = f"""
     <style>
@@ -526,8 +526,8 @@ def show_polyrhythm_clock(
             </svg>
             <div class="clock-legend">
                 <div class="legend-item"><span class="legend-swatch black"></span> Black hand = measure position</div>
-                <div class="legend-item"><span class="legend-swatch red"></span> Red ticks = high rhythm</div>
-                <div class="legend-item"><span class="legend-swatch blue"></span> Blue ticks = low rhythm</div>
+                <div class="legend-item"><span class="legend-swatch red"></span> Red inner ticks = high rhythm</div>
+                <div class="legend-item"><span class="legend-swatch blue"></span> Blue outer ticks = low rhythm</div>
             </div>
         </div>
         <div class="loop-note">
