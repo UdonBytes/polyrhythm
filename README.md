@@ -1,6 +1,6 @@
 # Polyrhythm Generator
 
-Python based polyrhythm generator that creates customizable rhythmic audio tracks using layered percussion samples.
+Python-based polyrhythm generator that creates customizable layered percussion patterns with animated visual playback.
 
 ## Live App
 
@@ -12,18 +12,25 @@ https://polyrhythm-generator.streamlit.app/
 * Half, quarter, eighth, and sixteenth note support
 * Custom polyrhythms
 * Accented downbeats
-* Looping playback
-* WAV file generation
+* Seamless looping playback
+* Animated beat timeline
+* WAV download
 
 ## How to Run
 
 Install required libraries:
 
 ```bash
-py -m pip install numpy soundfile
+py -m pip install -r requirements.txt
 ```
 
-Run the program:
+Run the Streamlit app:
+
+```bash
+py -m streamlit run app.py
+```
+
+You can also run the command-line version:
 
 ```bash
 py main.py
@@ -40,10 +47,10 @@ Low woodblock beats: 5
 
 Generates a looping 3:5 polyrhythm audio file.
 
-## Future Plans
+## Project Structure
 
-* Web interface
-* Visual rhythm display
-* Custom percussion sounds
-* Melodic note playback
-* Export options
+* `app.py` - Streamlit user interface
+* `audio.py` - audio sample loading and WAV generation
+* `rhythm.py` - shared rhythm timing calculations
+* `timeline.py` - animated visual timeline and Web Audio playback
+* `main.py` - simple command-line version
