@@ -210,7 +210,7 @@ def draw_animated_timeline(
         <div class="loop-note">
             Press play to hear the rhythm and watch the playhead follow the beat.
         </div>
-        <audio id="rhythm-audio" controls src="data:audio/wav;base64,{audio_base64}"></audio>
+        <audio id="rhythm-audio" controls loop src="data:audio/wav;base64,{audio_base64}"></audio>
     </div>
 
     <script>
