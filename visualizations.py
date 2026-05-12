@@ -365,7 +365,7 @@ def show_polyrhythm_clock(
 
         for i in range(number_of_beats):
             angle = i * 360 / number_of_beats
-            x1, y1 = clock_point(angle, 98)
+            x1, y1 = 150, 150
             x2, y2 = clock_point(angle, 132)
             beat_time = i * measure_seconds / number_of_beats
             downbeat_class = " downbeat-tick" if i == 0 else ""
