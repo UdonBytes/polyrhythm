@@ -2,6 +2,10 @@
 
 Python based polyrhythm generator that creates customizable rhythmic audio tracks using layered percussion samples.
 
+## Live App
+
+https://polyrhythm-generator.streamlit.app/
+
 ## Features
 
 * Adjustable BPM
