@@ -439,4 +439,5 @@ if st.button("Generate"):
             data=audio_file,
             file_name="polyrhythm.wav",
             mime="audio/wav",
+            on_click="ignore",
         )
