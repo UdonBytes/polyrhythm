@@ -360,14 +360,13 @@ def show_polyrhythm_clock(
 
         return x, y
 
-    def division_lines(number_of_beats, color, rhythm_name):
+    def division_lines(number_of_beats, color, rhythm_name, inner_radius, outer_radius):
         lines = ""
-        stroke_width = 7 if rhythm_name == "low-clock" else 4
 
         for i in range(number_of_beats):
             angle = i * 360 / number_of_beats
-            x1, y1 = 150, 150
-            x2, y2 = clock_point(angle, 132)
+            x1, y1 = clock_point(angle, inner_radius)
+            x2, y2 = clock_point(angle, outer_radius)
             beat_time = i * measure_seconds / number_of_beats
             downbeat_class = " downbeat-tick" if i == 0 else ""
 
@@ -379,15 +378,14 @@ def show_polyrhythm_clock(
                 x2="{x2:.2f}"
                 y2="{y2:.2f}"
                 stroke="{color}"
-                stroke-width="{stroke_width}"
                 data-beat-time="{beat_time}"
             />
             """
 
         return lines
 
-    low_lines = division_lines(low_beats, "#2E86AB", "low-clock")
-    high_lines = division_lines(high_beats, "#C44536", "high-clock")
+    high_lines = division_lines(high_beats, "#C44536", "high-clock", 24, 82)
+    low_lines = division_lines(low_beats, "#2E86AB", "low-clock", 96, 132)
 
     html = f"""
     <style>
@@ -420,14 +418,13 @@ def show_polyrhythm_clock(
         }}
 
         .division-tick {{
+            stroke-width: 5;
             stroke-linecap: round;
             transition: stroke-width 0.08s ease, opacity 0.08s ease;
         }}
 
         .downbeat-tick {{
-            stroke: #111111;
-            stroke-width: 7;
-            opacity: 0.85;
+            stroke-width: 8;
         }}
 
         .active-tick {{
@@ -528,8 +525,8 @@ def show_polyrhythm_clock(
             </svg>
             <div class="clock-legend">
                 <div class="legend-item"><span class="legend-swatch black"></span> Black hand = measure position</div>
-                <div class="legend-item"><span class="legend-swatch red"></span> Red ticks = high rhythm</div>
-                <div class="legend-item"><span class="legend-swatch blue"></span> Blue ticks = low rhythm</div>
+                <div class="legend-item"><span class="legend-swatch red"></span> Red inner ring = high rhythm</div>
+                <div class="legend-item"><span class="legend-swatch blue"></span> Blue outer ring = low rhythm</div>
             </div>
         </div>
         <div class="loop-note">
