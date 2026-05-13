@@ -48,6 +48,16 @@ st.markdown(
         div[data-testid="stSlider"] [role="slider"] {{
             background: {SLIDER_REST_COLOR} !important;
             border-color: {SLIDER_REST_COLOR} !important;
+            box-shadow: 0 0 0 0.2rem rgba(143, 163, 184, 0.35) !important;
+            outline-color: {SLIDER_FILL_COLOR} !important;
+        }}
+
+        div[data-testid="stSlider"] [role="slider"]:focus,
+        div[data-testid="stSlider"] [role="slider"]:focus-visible,
+        div[data-testid="stSlider"] [role="slider"]:active {{
+            border-color: {SLIDER_FILL_COLOR} !important;
+            box-shadow: 0 0 0 0.2rem rgba(143, 163, 184, 0.45) !important;
+            outline: 2px solid {SLIDER_FILL_COLOR} !important;
         }}
     </style>
     """,
