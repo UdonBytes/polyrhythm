@@ -676,4 +676,4 @@ def show_polyrhythm_clock(
     </script>
     """
 
-    components.html(html, height=560)
+    components.html(html, height=530)
