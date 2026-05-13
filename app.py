@@ -81,6 +81,30 @@ st.markdown(
         div[data-baseweb="popover"] div[role="listbox"] {{
             border-color: {SLIDER_FILL_COLOR} !important;
         }}
+
+        div[data-testid="stNumberInput"] div[data-baseweb="input"]:hover,
+        div[data-testid="stNumberInput"] .focused,
+        div[data-testid="stNumberInput"] .focused *,
+        div[data-testid="stNumberInput"] .focused div[data-baseweb="input"],
+        div[data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within {{
+            border-color: {SLIDER_FILL_COLOR} !important;
+            box-shadow: 0 0 0 1px {SLIDER_FILL_COLOR} !important;
+            outline-color: {SLIDER_FILL_COLOR} !important;
+        }}
+
+        div[data-testid="stNumberInput"] input:focus,
+        div[data-testid="stNumberInput"] input:focus-visible {{
+            border-color: {SLIDER_FILL_COLOR} !important;
+            box-shadow: none !important;
+            outline-color: {SLIDER_FILL_COLOR} !important;
+        }}
+
+        div[data-testid="stNumberInput"] div[style*="rgb(255, 75, 75)"],
+        div[data-testid="stNumberInput"] input[style*="rgb(255, 75, 75)"] {{
+            border-color: {SLIDER_FILL_COLOR} !important;
+            box-shadow: 0 0 0 1px {SLIDER_FILL_COLOR} !important;
+            outline-color: {SLIDER_FILL_COLOR} !important;
+        }}
     </style>
     """,
     unsafe_allow_html=True,
