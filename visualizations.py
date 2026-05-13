@@ -413,7 +413,7 @@ def show_polyrhythm_clock(
         }}
 
         .clock-face {{
-            width: 460px;
+            width: 420px;
             max-width: 100%;
             height: auto;
         }}
@@ -675,4 +675,4 @@ def show_polyrhythm_clock(
     </script>
     """
 
-    components.html(html, height=500)
+    components.html(html, height=510)
