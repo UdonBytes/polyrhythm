@@ -190,7 +190,7 @@ def show_animated_timeline(
     </style>
 
     <div class="timeline-wrapper">
-        <div class="timeline-title">Animated rhythm timeline</div>
+        <div class="timeline-title">Animated Rhythm Timeline</div>
         <div class="timeline" id="rhythm-timeline">
             <div class="row-label high-label">High</div>
             <div class="row-label low-label">Low</div>
@@ -205,7 +205,7 @@ def show_animated_timeline(
             <div class="playhead"></div>
         </div>
         <div class="loop-note">
-            Press play to hear the rhythm and watch the playhead follow the beat.
+            Press Play To Hear The Rhythm And Watch The Playhead Follow The Beat.
         </div>
         <div class="audio-controls">
             <button class="play-button" id="play-button">Play</button>
@@ -525,9 +525,9 @@ def show_polyrhythm_clock(
     </style>
 
     <div class="clock-wrapper">
-        <div class="clock-title">Polyrhythm clock</div>
+        <div class="clock-title">Polyrhythm Clock</div>
         <div class="clock-panel">
-            <svg class="clock-face" viewBox="0 0 300 300" aria-label="Polyrhythm clock">
+            <svg class="clock-face" viewBox="0 0 300 300" aria-label="Polyrhythm Clock">
                 <circle cx="150" cy="150" r="134" fill="#ffffff" stroke="#8f8f8f" stroke-width="2" />
                 <circle cx="150" cy="150" r="78" fill="none" stroke="#8f8f8f" stroke-width="2" />
                 {high_lines}
@@ -539,13 +539,13 @@ def show_polyrhythm_clock(
                 <circle class="clock-center" cx="150" cy="150" r="12" />
             </svg>
             <div class="clock-legend">
-                <div class="legend-item"><span class="legend-swatch black"></span> Black hand = measure position</div>
-                <div class="legend-item"><span class="legend-swatch red"></span> Red inner ring = high rhythm</div>
-                <div class="legend-item"><span class="legend-swatch blue"></span> Blue outer ring = low rhythm</div>
+                <div class="legend-item"><span class="legend-swatch black"></span> Black Hand = Measure Position</div>
+                <div class="legend-item"><span class="legend-swatch red"></span> Red Inner Ring = High Rhythm</div>
+                <div class="legend-item"><span class="legend-swatch blue"></span> Blue Outer Ring = Low Rhythm</div>
             </div>
         </div>
         <div class="loop-note">
-            Press play to hear the rhythm and watch the hand rotate through the measure.
+            Press Play To Hear The Rhythm And Watch The Hand Rotate Through The Measure.
         </div>
         <div class="audio-controls">
             <button class="play-button" id="play-button">Play</button>

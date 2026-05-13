@@ -128,7 +128,7 @@ st.number_input(
     on_change=update_tempo_from_number,
 )
 st.slider(
-    "Tempo/BPM slider",
+    "Tempo/BPM Slider",
     min_value=MIN_BPM,
     max_value=MAX_BPM,
     key="tempo_bpm_slider",
@@ -136,12 +136,12 @@ st.slider(
     label_visibility="collapsed",
 )
 bpm = st.session_state["tempo_bpm"]
-note_type = st.selectbox("Beat note type", ["Half", "Quarter", "Eighth", "Sixteenth"], index=1)
+note_type = st.selectbox("Beat Note Type", ["Half", "Quarter", "Eighth", "Sixteenth"], index=1)
 high_beats = st.number_input("High Woodblock Beats", min_value=1, max_value=20, value=2)
 low_beats = st.number_input("Low Woodblock Beats", min_value=1, max_value=20, value=3)
 visualization = st.selectbox(
     "Visualization",
-    ["Horizontal timeline", "Polyrhythm clock"],
+    ["Horizontal Timeline", "Polyrhythm Clock"],
 )
 
 if st.button("Generate"):
@@ -165,7 +165,7 @@ if "generated_rhythm" in st.session_state:
 
     st.success("Done!")
 
-    if visualization == "Horizontal timeline":
+    if visualization == "Horizontal Timeline":
         show_animated_timeline(
             rhythm["high_beats"],
             rhythm["low_beats"],
