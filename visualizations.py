@@ -16,6 +16,7 @@ def show_animated_timeline(
     beats_per_measure,
     measure_seconds,
     audio_bytes,
+    subdivision_count,
 ):
     """Draw an animated timeline with a playhead synced to the audio player."""
     high_markers = get_beat_marker_positions(high_beats, beats_per_measure)
@@ -38,17 +39,22 @@ def show_animated_timeline(
 
         return html
 
-    beat_lines_html = ""
+    subdivision_lines_html = ""
 
-    for beat in range(beats_per_measure + 1):
-        beat_percent = beat / beats_per_measure * 100
-        downbeat_class = " downbeat-line" if beat == 0 else ""
-        beat_lines_html += f"""
-        <span
-            class="beat-line{downbeat_class}"
-            style="left: {beat_percent}%;"
-        ></span>
+    if subdivision_count > 0:
+        subdivision_lines_html = """
+            <span class="subdivision-line downbeat-line" style="left: 0%;"></span>
+            <span class="subdivision-line measure-end-line" style="left: 100%;"></span>
         """
+
+        for subdivision in range(1, subdivision_count):
+            subdivision_percent = subdivision / subdivision_count * 100
+            subdivision_lines_html += f"""
+            <span
+                class="subdivision-line"
+                style="left: {subdivision_percent}%;"
+            ></span>
+            """
 
     html = f"""
     <style>
@@ -73,17 +79,30 @@ def show_animated_timeline(
             overflow: hidden;
         }}
 
-        .beat-line {{
+        .subdivision-layer {{
             position: absolute;
+            left: 90px;
+            right: 24px;
             top: 24px;
             bottom: 24px;
+        }}
+
+        .subdivision-line {{
+            position: absolute;
+            top: 0;
+            bottom: 0;
             width: 1px;
             background: #dddddd;
+            transform: translateX(-50%);
         }}
 
         .downbeat-line {{
             width: 3px;
             background: #111111;
+        }}
+
+        .measure-end-line {{
+            background: #dddddd;
         }}
 
         .rhythm-row {{
@@ -156,6 +175,7 @@ def show_animated_timeline(
             left: 90px;
             width: 3px;
             background: #111111;
+            transform: translateX(-50%);
         }}
 
         .loop-note {{
@@ -192,14 +212,15 @@ def show_animated_timeline(
     <div class="timeline-wrapper">
         <div class="timeline-title">Animated Rhythm Timeline</div>
         <div class="timeline" id="rhythm-timeline">
+            <div class="subdivision-layer">
+                {subdivision_lines_html}
+            </div>
             <div class="row-label high-label">High</div>
             <div class="row-label low-label">Low</div>
             <div class="rhythm-row high-row">
-                {beat_lines_html}
                 {marker_html(high_markers, "high")}
             </div>
             <div class="rhythm-row low-row">
-                {beat_lines_html}
                 {marker_html(low_markers, "low")}
             </div>
             <div class="playhead"></div>
@@ -349,6 +370,7 @@ def show_polyrhythm_clock(
     beats_per_measure,
     measure_seconds,
     audio_bytes,
+    subdivision_count,
 ):
     """Draw a clock-style rhythm visual with a rotating playhead."""
     audio_base64 = get_audio_base64(audio_bytes)
@@ -384,8 +406,33 @@ def show_polyrhythm_clock(
 
         return lines
 
+    def subdivision_lines(number_of_subdivisions):
+        lines = ""
+
+        if number_of_subdivisions == 0:
+            return lines
+
+        for i in range(number_of_subdivisions):
+            angle = i * 360 / number_of_subdivisions
+            x1, y1 = clock_point(angle, 30)
+            x2, y2 = clock_point(angle, 128)
+            downbeat_class = " downbeat-subdivision" if i == 0 else ""
+
+            lines += f"""
+            <line
+                class="subdivision-tick{downbeat_class}"
+                x1="{x1:.2f}"
+                y1="{y1:.2f}"
+                x2="{x2:.2f}"
+                y2="{y2:.2f}"
+            />
+            """
+
+        return lines
+
     high_lines = division_lines(high_beats, "#E00000", "high-clock", 30, 68)
     low_lines = division_lines(low_beats, "#006DFF", "low-clock", 88, 128)
+    subdivision_ticks = subdivision_lines(subdivision_count)
 
     html = f"""
     <style>
@@ -422,6 +469,17 @@ def show_polyrhythm_clock(
             stroke-width: 5;
             stroke-linecap: round;
             transition: stroke-width 0.08s ease, opacity 0.08s ease;
+        }}
+
+        .subdivision-tick {{
+            stroke: #cfcfcf;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+        }}
+
+        .downbeat-subdivision {{
+            stroke: #8f8f8f;
+            stroke-width: 2.5;
         }}
 
         .downbeat-tick {{
@@ -530,6 +588,7 @@ def show_polyrhythm_clock(
             <svg class="clock-face" viewBox="0 0 300 300" aria-label="Polyrhythm Clock">
                 <circle cx="150" cy="150" r="134" fill="#ffffff" stroke="#8f8f8f" stroke-width="2" />
                 <circle cx="150" cy="150" r="78" fill="none" stroke="#8f8f8f" stroke-width="2" />
+                {subdivision_ticks}
                 {high_lines}
                 {low_lines}
                 <g id="clock-hand" class="clock-hand">

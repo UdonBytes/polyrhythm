@@ -12,6 +12,11 @@ MAX_BPM = 240
 DEFAULT_BPM = 120
 SLIDER_FILL_COLOR = "#8fa3b8"
 SLIDER_REST_COLOR = "#f5f5f5"
+SUBDIVISION_OPTIONS = {
+    "None": 0,
+    "Halves": 2,
+    "Quarters": 4,
+}
 
 
 st.title("Polyrhythm Generator")
@@ -143,6 +148,11 @@ visualization = st.selectbox(
     "Visualization",
     ["Horizontal Timeline", "Polyrhythm Clock"],
 )
+subdivision_guides = st.selectbox(
+    "Subdivision Guides",
+    list(SUBDIVISION_OPTIONS.keys()),
+    index=0,
+)
 
 if st.button("Generate"):
     measure_seconds = get_measure_seconds(bpm, note_type, BEATS_PER_MEASURE)
@@ -172,6 +182,7 @@ if "generated_rhythm" in st.session_state:
             BEATS_PER_MEASURE,
             rhythm["measure_seconds"],
             rhythm["audio_bytes"],
+            SUBDIVISION_OPTIONS[subdivision_guides],
         )
     else:
         show_polyrhythm_clock(
@@ -180,6 +191,7 @@ if "generated_rhythm" in st.session_state:
             BEATS_PER_MEASURE,
             rhythm["measure_seconds"],
             rhythm["audio_bytes"],
+            SUBDIVISION_OPTIONS[subdivision_guides],
         )
 
     st.download_button(
@@ -188,4 +200,8 @@ if "generated_rhythm" in st.session_state:
         file_name="polyrhythm.wav",
         mime="audio/wav",
         on_click="ignore",
+    )
+    st.caption(
+        "Playback Speed Changes The Effective BPM After Download. "
+        "For Example, 0.75x Of 120 BPM Plays Like 90 BPM."
     )
