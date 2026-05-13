@@ -10,6 +10,9 @@ LOOPS = 4
 MIN_BPM = 40
 MAX_BPM = 240
 DEFAULT_BPM = 120
+MIN_PLAYBACK_SPEED_PERCENT = 50
+MAX_PLAYBACK_SPEED_PERCENT = 200
+DEFAULT_PLAYBACK_SPEED_PERCENT = 100
 SLIDER_FILL_COLOR = "#8fa3b8"
 SLIDER_REST_COLOR = "#f5f5f5"
 SUBDIVISION_OPTIONS = {
@@ -31,6 +34,15 @@ tempo_percent = (
     / (MAX_BPM - MIN_BPM)
     * 100
 )
+playback_speed_percent = st.session_state.get(
+    "playback_speed_slider",
+    DEFAULT_PLAYBACK_SPEED_PERCENT,
+)
+playback_speed_fill_percent = (
+    (playback_speed_percent - MIN_PLAYBACK_SPEED_PERCENT)
+    / (MAX_PLAYBACK_SPEED_PERCENT - MIN_PLAYBACK_SPEED_PERCENT)
+    * 100
+)
 
 st.markdown(
     f"""
@@ -40,12 +52,22 @@ st.markdown(
             color: {SLIDER_REST_COLOR} !important;
         }}
 
-        div[data-testid="stSlider"] [data-baseweb="slider"] div[style="height: 0.25rem;"] {{
+        div[data-testid="stSlider"]:has([aria-label="Tempo/BPM Slider"]) [data-baseweb="slider"] div[style="height: 0.25rem;"] {{
             background: linear-gradient(
                 to right,
                 {SLIDER_FILL_COLOR} 0%,
                 {SLIDER_FILL_COLOR} {tempo_percent}%,
                 {SLIDER_REST_COLOR} {tempo_percent}%,
+                {SLIDER_REST_COLOR} 100%
+            ) !important;
+        }}
+
+        div[data-testid="stSlider"]:has([aria-label^="Playback Speed (%)"]) [data-baseweb="slider"] div[style="height: 0.25rem;"] {{
+            background: linear-gradient(
+                to right,
+                {SLIDER_FILL_COLOR} 0%,
+                {SLIDER_FILL_COLOR} {playback_speed_fill_percent}%,
+                {SLIDER_REST_COLOR} {playback_speed_fill_percent}%,
                 {SLIDER_REST_COLOR} 100%
             ) !important;
         }}
@@ -141,7 +163,6 @@ st.slider(
     label_visibility="collapsed",
 )
 bpm = st.session_state["tempo_bpm"]
-note_type = st.selectbox("Beat Note Type", ["Half", "Quarter", "Eighth", "Sixteenth"], index=1)
 high_beats = st.number_input("High Woodblock Beats", min_value=1, max_value=20, value=2)
 low_beats = st.number_input("Low Woodblock Beats", min_value=1, max_value=20, value=3)
 visualization = st.selectbox(
@@ -155,23 +176,37 @@ subdivision_guides = st.selectbox(
 )
 
 if st.button("Generate"):
-    measure_seconds = get_measure_seconds(bpm, note_type, BEATS_PER_MEASURE)
-    audio_bytes = generate_polyrhythm_audio(
-        high_beats,
-        low_beats,
-        measure_seconds,
-        LOOPS,
-    )
-
     st.session_state["generated_rhythm"] = {
-        "audio_bytes": audio_bytes,
+        "bpm": bpm,
         "high_beats": high_beats,
         "low_beats": low_beats,
-        "measure_seconds": measure_seconds,
     }
 
 if "generated_rhythm" in st.session_state:
     rhythm = st.session_state["generated_rhythm"]
+    base_bpm = rhythm.get("bpm", bpm)
+
+    effective_bpm = base_bpm * playback_speed_percent / 100
+    playback_speed_label = (
+        f"Playback Speed (%) - {effective_bpm:g} Effective BPM"
+    )
+    playback_speed_percent = st.slider(
+        playback_speed_label,
+        min_value=MIN_PLAYBACK_SPEED_PERCENT,
+        max_value=MAX_PLAYBACK_SPEED_PERCENT,
+        value=DEFAULT_PLAYBACK_SPEED_PERCENT,
+        format="%d%%",
+        key="playback_speed_slider",
+    )
+    effective_bpm = base_bpm * playback_speed_percent / 100
+
+    measure_seconds = get_measure_seconds(effective_bpm, "Quarter", BEATS_PER_MEASURE)
+    audio_bytes = generate_polyrhythm_audio(
+        rhythm["high_beats"],
+        rhythm["low_beats"],
+        measure_seconds,
+        LOOPS,
+    )
 
     st.success("Done!")
 
@@ -180,8 +215,8 @@ if "generated_rhythm" in st.session_state:
             rhythm["high_beats"],
             rhythm["low_beats"],
             BEATS_PER_MEASURE,
-            rhythm["measure_seconds"],
-            rhythm["audio_bytes"],
+            measure_seconds,
+            audio_bytes,
             SUBDIVISION_OPTIONS[subdivision_guides],
         )
     else:
@@ -189,19 +224,15 @@ if "generated_rhythm" in st.session_state:
             rhythm["high_beats"],
             rhythm["low_beats"],
             BEATS_PER_MEASURE,
-            rhythm["measure_seconds"],
-            rhythm["audio_bytes"],
+            measure_seconds,
+            audio_bytes,
             SUBDIVISION_OPTIONS[subdivision_guides],
         )
 
     st.download_button(
         label="Download WAV",
-        data=rhythm["audio_bytes"],
+        data=audio_bytes,
         file_name="polyrhythm.wav",
         mime="audio/wav",
         on_click="ignore",
-    )
-    st.caption(
-        "Playback Speed Changes The Effective BPM After Download. "
-        "For Example, 0.75x Of 120 BPM Plays Like 90 BPM."
     )
