@@ -7,11 +7,80 @@ from visualizations import show_animated_timeline, show_polyrhythm_clock
 
 BEATS_PER_MEASURE = 4
 LOOPS = 4
+MIN_BPM = 40
+MAX_BPM = 240
+DEFAULT_BPM = 120
+SLIDER_FILL_COLOR = "#8fa3b8"
+SLIDER_REST_COLOR = "#f5f5f5"
 
 
 st.title("Polyrhythm Generator")
 
-bpm = st.number_input("Tempo/BPM", min_value=40, max_value=240, value=120)
+if "tempo_bpm" not in st.session_state:
+    st.session_state["tempo_bpm"] = DEFAULT_BPM
+    st.session_state["tempo_bpm_number"] = DEFAULT_BPM
+    st.session_state["tempo_bpm_slider"] = DEFAULT_BPM
+
+tempo_percent = (
+    (st.session_state["tempo_bpm"] - MIN_BPM)
+    / (MAX_BPM - MIN_BPM)
+    * 100
+)
+
+st.markdown(
+    f"""
+    <style>
+        div[data-testid="stSlider"],
+        div[data-testid="stSlider"] * {{
+            color: {SLIDER_REST_COLOR} !important;
+        }}
+
+        div[data-testid="stSlider"] [data-baseweb="slider"] div[style="height: 0.25rem;"] {{
+            background: linear-gradient(
+                to right,
+                {SLIDER_FILL_COLOR} 0%,
+                {SLIDER_FILL_COLOR} {tempo_percent}%,
+                {SLIDER_REST_COLOR} {tempo_percent}%,
+                {SLIDER_REST_COLOR} 100%
+            ) !important;
+        }}
+
+        div[data-testid="stSlider"] [role="slider"] {{
+            background: {SLIDER_REST_COLOR} !important;
+            border-color: {SLIDER_REST_COLOR} !important;
+        }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+def update_tempo_from_number():
+    st.session_state["tempo_bpm"] = st.session_state["tempo_bpm_number"]
+    st.session_state["tempo_bpm_slider"] = st.session_state["tempo_bpm_number"]
+
+
+def update_tempo_from_slider():
+    st.session_state["tempo_bpm"] = st.session_state["tempo_bpm_slider"]
+    st.session_state["tempo_bpm_number"] = st.session_state["tempo_bpm_slider"]
+
+
+st.number_input(
+    "Tempo/BPM",
+    min_value=MIN_BPM,
+    max_value=MAX_BPM,
+    key="tempo_bpm_number",
+    on_change=update_tempo_from_number,
+)
+st.slider(
+    "Tempo/BPM slider",
+    min_value=MIN_BPM,
+    max_value=MAX_BPM,
+    key="tempo_bpm_slider",
+    on_change=update_tempo_from_slider,
+    label_visibility="collapsed",
+)
+bpm = st.session_state["tempo_bpm"]
 note_type = st.selectbox("Beat note type", ["Half", "Quarter", "Eighth", "Sixteenth"], index=1)
 high_beats = st.number_input("High Woodblock Beats", min_value=1, max_value=20, value=2)
 low_beats = st.number_input("Low Woodblock Beats", min_value=1, max_value=20, value=3)
