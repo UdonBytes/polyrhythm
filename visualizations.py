@@ -405,15 +405,15 @@ def show_polyrhythm_clock(
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 2rem;
+            gap: 1.25rem;
             border: 1px solid #eeeeee;
             border-radius: 8px;
             background: #ffffff;
-            padding: 1.25rem;
+            padding: 1rem;
         }}
 
         .clock-face {{
-            width: 420px;
+            width: 360px;
             max-width: 100%;
             height: auto;
         }}
@@ -486,9 +486,10 @@ def show_polyrhythm_clock(
         }}
 
         .loop-note {{
-            margin-top: 0.5rem;
             color: #cfcfcf;
             font-size: 13px;
+            line-height: 1.4;
+            margin-top: 0.5rem;
         }}
 
         .audio-controls {{
@@ -515,7 +516,7 @@ def show_polyrhythm_clock(
             font-size: 14px;
         }}
 
-        @media (max-width: 560px) {{
+        @media (max-width: 420px) {{
             .clock-panel {{
                 flex-direction: column;
                 align-items: flex-start;
@@ -675,4 +676,4 @@ def show_polyrhythm_clock(
     </script>
     """
 
-    components.html(html, height=510)
+    components.html(html, height=500)
