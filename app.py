@@ -186,6 +186,8 @@ if "generated_rhythm" in st.session_state:
     rhythm = st.session_state["generated_rhythm"]
     base_bpm = rhythm.get("bpm", bpm)
 
+    st.success("Done!")
+
     effective_bpm = base_bpm * playback_speed_percent / 100
     playback_speed_label = (
         f"Playback Speed (%) - {effective_bpm:g} Effective BPM"
@@ -207,8 +209,6 @@ if "generated_rhythm" in st.session_state:
         measure_seconds,
         LOOPS,
     )
-
-    st.success("Done!")
 
     if visualization == "Horizontal Timeline":
         show_animated_timeline(
