@@ -384,8 +384,8 @@ def show_polyrhythm_clock(
 
         return lines
 
-    high_lines = division_lines(high_beats, "#C44536", "high-clock", 54, 90)
-    low_lines = division_lines(low_beats, "#2E86AB", "low-clock", 96, 132)
+    high_lines = division_lines(high_beats, "#E00000", "high-clock", 30, 68)
+    low_lines = division_lines(low_beats, "#006DFF", "low-clock", 88, 128)
 
     html = f"""
     <style>
@@ -404,21 +404,22 @@ def show_polyrhythm_clock(
         .clock-panel {{
             display: flex;
             align-items: center;
-            gap: 1.5rem;
-            border: 1px solid #dddddd;
+            justify-content: center;
+            gap: 2rem;
+            border: 1px solid #eeeeee;
             border-radius: 8px;
             background: #ffffff;
-            padding: 1rem;
+            padding: 1.25rem;
         }}
 
         .clock-face {{
-            width: 300px;
+            width: 460px;
             max-width: 100%;
             height: auto;
         }}
 
         .division-tick {{
-            stroke-width: 4;
+            stroke-width: 5;
             stroke-linecap: round;
             transition: stroke-width 0.08s ease, opacity 0.08s ease;
         }}
@@ -434,10 +435,19 @@ def show_polyrhythm_clock(
         }}
 
         .clock-hand {{
+            transform-origin: 150px 150px;
+        }}
+
+        .clock-hand-line {{
             stroke: #111111;
             stroke-width: 4;
             stroke-linecap: round;
-            transform-origin: 150px 150px;
+        }}
+
+        .clock-hand-tip {{
+            fill: #ffffff;
+            stroke: #111111;
+            stroke-width: 2;
         }}
 
         .clock-center {{
@@ -468,11 +478,11 @@ def show_polyrhythm_clock(
         }}
 
         .red {{
-            background: #C44536;
+            background: #E00000;
         }}
 
         .blue {{
-            background: #2E86AB;
+            background: #006DFF;
         }}
 
         .loop-note {{
@@ -517,13 +527,15 @@ def show_polyrhythm_clock(
         <div class="clock-title">Polyrhythm clock</div>
         <div class="clock-panel">
             <svg class="clock-face" viewBox="0 0 300 300" aria-label="Polyrhythm clock">
-                <circle cx="150" cy="150" r="132" fill="#fafafa" stroke="#dddddd" stroke-width="2" />
-                <circle cx="150" cy="150" r="90" fill="none" stroke="#eeeeee" stroke-width="1" />
-                <circle cx="150" cy="150" r="96" fill="none" stroke="#eeeeee" stroke-width="1" />
+                <circle cx="150" cy="150" r="134" fill="#ffffff" stroke="#8f8f8f" stroke-width="2" />
+                <circle cx="150" cy="150" r="78" fill="none" stroke="#8f8f8f" stroke-width="2" />
                 {high_lines}
                 {low_lines}
-                <line id="clock-hand" class="clock-hand" x1="150" y1="150" x2="150" y2="34" />
-                <circle class="clock-center" cx="150" cy="150" r="7" />
+                <g id="clock-hand" class="clock-hand">
+                    <line class="clock-hand-line" x1="150" y1="150" x2="150" y2="26" />
+                    <rect class="clock-hand-tip" x="145" y="21" width="10" height="10" />
+                </g>
+                <circle class="clock-center" cx="150" cy="150" r="12" />
             </svg>
             <div class="clock-legend">
                 <div class="legend-item"><span class="legend-swatch black"></span> Black hand = measure position</div>
