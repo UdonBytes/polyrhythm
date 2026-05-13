@@ -84,7 +84,6 @@ st.markdown(
 
         div[data-testid="stNumberInput"] div[data-baseweb="input"]:hover,
         div[data-testid="stNumberInput"] .focused,
-        div[data-testid="stNumberInput"] .focused *,
         div[data-testid="stNumberInput"] .focused div[data-baseweb="input"],
         div[data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within {{
             border-color: {SLIDER_FILL_COLOR} !important;
