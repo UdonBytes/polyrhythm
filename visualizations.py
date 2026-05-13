@@ -16,7 +16,7 @@ def show_animated_timeline(
     beats_per_measure,
     measure_seconds,
     audio_bytes,
-    subdivision_count,
+    subdivision_count=0,
 ):
     """Draw an animated timeline with a playhead synced to the audio player."""
     high_markers = get_beat_marker_positions(high_beats, beats_per_measure)
@@ -370,7 +370,7 @@ def show_polyrhythm_clock(
     beats_per_measure,
     measure_seconds,
     audio_bytes,
-    subdivision_count,
+    subdivision_count=0,
 ):
     """Draw a clock-style rhythm visual with a rotating playhead."""
     audio_base64 = get_audio_base64(audio_bytes)
