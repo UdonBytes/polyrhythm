@@ -59,6 +59,28 @@ st.markdown(
             box-shadow: 0 0 0 0.2rem rgba(143, 163, 184, 0.45) !important;
             outline: 2px solid {SLIDER_FILL_COLOR} !important;
         }}
+
+        div[data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover {{
+            border-color: {SLIDER_FILL_COLOR} !important;
+        }}
+
+        div[data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
+        div[data-testid="stSelectbox"] div[data-baseweb="select"] > div[aria-expanded="true"] {{
+            border-color: {SLIDER_FILL_COLOR} !important;
+            box-shadow: 0 0 0 1px {SLIDER_FILL_COLOR} !important;
+            outline-color: {SLIDER_FILL_COLOR} !important;
+        }}
+
+        div[data-testid="stSelectbox"] div[data-baseweb="select"] div[style*="rgb(255, 75, 75)"] {{
+            border-color: {SLIDER_FILL_COLOR} !important;
+            box-shadow: 0 0 0 1px {SLIDER_FILL_COLOR} !important;
+            outline-color: {SLIDER_FILL_COLOR} !important;
+        }}
+
+        div[data-baseweb="popover"] > div,
+        div[data-baseweb="popover"] div[role="listbox"] {{
+            border-color: {SLIDER_FILL_COLOR} !important;
+        }}
     </style>
     """,
     unsafe_allow_html=True,
