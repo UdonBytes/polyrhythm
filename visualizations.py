@@ -19,6 +19,7 @@ def show_animated_timeline(
     subdivision_count=0,
     muted_high_beats=None,
     muted_low_beats=None,
+    should_autoplay=False,
 ):
     """Draw an animated timeline with a playhead synced to the audio player."""
     if muted_high_beats is None:
@@ -292,6 +293,7 @@ def show_animated_timeline(
         const timeLabel = document.getElementById("time-label");
         const measureSeconds = {measure_seconds};
         const audioBase64 = "{audio_base64}";
+        const shouldAutoplay = {str(should_autoplay).lower()};
         const audioContext = new AudioContext();
         let audioBuffer = null;
         let source = null;
@@ -374,7 +376,19 @@ def show_animated_timeline(
             }}
         }}
 
-        async function playLoop() {{
+        function savePlaybackIntent(intent) {{
+            try {{
+                const parentUrl = new URL(window.parent.location.href);
+                parentUrl.searchParams.set("playback_intent", intent);
+                window.parent.history.replaceState(null, "", parentUrl.toString());
+            }} catch (error) {{
+                // Some browsers may block iframe access to the parent URL.
+                // In that case, autoplay-after-rerun cannot be tracked reliably.
+                console.warn("Could not save playback intent.", error);
+            }}
+        }}
+
+        async function playLoop(saveIntent = true) {{
             await audioContext.resume();
             const buffer = await loadAudioBuffer();
 
@@ -387,10 +401,13 @@ def show_animated_timeline(
             startedAt = audioContext.currentTime - pausedAt;
             isPlaying = true;
             playButton.textContent = "Pause";
+            if (saveIntent) {{
+                savePlaybackIntent("play");
+            }}
             updateTimeline();
         }}
 
-        function pauseLoop() {{
+        function pauseLoop(saveIntent = true) {{
             if (source !== null) {{
                 source.stop();
                 source.disconnect();
@@ -400,6 +417,9 @@ def show_animated_timeline(
             pausedAt = getPlaybackTime();
             isPlaying = false;
             playButton.textContent = "Play";
+            if (saveIntent) {{
+                savePlaybackIntent("pause");
+            }}
             cancelAnimationFrame(animationFrameId);
             updateTimeline();
         }}
@@ -413,6 +433,19 @@ def show_animated_timeline(
         }});
 
         updateTimeline();
+
+        if (shouldAutoplay) {{
+            // Browsers may block Web Audio autoplay after Streamlit reruns because
+            // the rerun is no longer inside the original user click gesture.
+            // If that happens, the user can press Play again and autoplay intent
+            // will continue from future user-approved playback.
+            playLoop(false).catch(function(error) {{
+                console.warn("Autoplay after rerun was blocked by the browser.", error);
+                isPlaying = false;
+                playButton.textContent = "Play";
+                updateTimeline();
+            }});
+        }}
     </script>
     """
 
@@ -428,6 +461,7 @@ def show_polyrhythm_clock(
     subdivision_count=0,
     muted_high_beats=None,
     muted_low_beats=None,
+    should_autoplay=False,
 ):
     """Draw a clock-style rhythm visual with a rotating playhead."""
     if muted_high_beats is None:
@@ -744,6 +778,7 @@ def show_polyrhythm_clock(
         const timeLabel = document.getElementById("time-label");
         const measureSeconds = {measure_seconds};
         const audioBase64 = "{audio_base64}";
+        const shouldAutoplay = {str(should_autoplay).lower()};
         const audioContext = new AudioContext();
         let audioBuffer = null;
         let source = null;
@@ -823,7 +858,19 @@ def show_polyrhythm_clock(
             }}
         }}
 
-        async function playLoop() {{
+        function savePlaybackIntent(intent) {{
+            try {{
+                const parentUrl = new URL(window.parent.location.href);
+                parentUrl.searchParams.set("playback_intent", intent);
+                window.parent.history.replaceState(null, "", parentUrl.toString());
+            }} catch (error) {{
+                // Some browsers may block iframe access to the parent URL.
+                // In that case, autoplay-after-rerun cannot be tracked reliably.
+                console.warn("Could not save playback intent.", error);
+            }}
+        }}
+
+        async function playLoop(saveIntent = true) {{
             await audioContext.resume();
             const buffer = await loadAudioBuffer();
 
@@ -836,10 +883,13 @@ def show_polyrhythm_clock(
             startedAt = audioContext.currentTime - pausedAt;
             isPlaying = true;
             playButton.textContent = "Pause";
+            if (saveIntent) {{
+                savePlaybackIntent("play");
+            }}
             updateClock();
         }}
 
-        function pauseLoop() {{
+        function pauseLoop(saveIntent = true) {{
             if (source !== null) {{
                 source.stop();
                 source.disconnect();
@@ -849,6 +899,9 @@ def show_polyrhythm_clock(
             pausedAt = getPlaybackTime();
             isPlaying = false;
             playButton.textContent = "Play";
+            if (saveIntent) {{
+                savePlaybackIntent("pause");
+            }}
             cancelAnimationFrame(animationFrameId);
             updateClock();
         }}
@@ -862,6 +915,19 @@ def show_polyrhythm_clock(
         }});
 
         updateClock();
+
+        if (shouldAutoplay) {{
+            // Browsers may block Web Audio autoplay after Streamlit reruns because
+            // the rerun is no longer inside the original user click gesture.
+            // If that happens, the user can press Play again and autoplay intent
+            // will continue from future user-approved playback.
+            playLoop(false).catch(function(error) {{
+                console.warn("Autoplay after rerun was blocked by the browser.", error);
+                isPlaying = false;
+                playButton.textContent = "Play";
+                updateClock();
+            }});
+        }}
     </script>
     """
 

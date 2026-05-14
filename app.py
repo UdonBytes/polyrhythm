@@ -27,6 +27,19 @@ if "tempo_bpm" not in st.session_state:
     st.session_state["tempo_bpm_number"] = DEFAULT_BPM
     st.session_state["tempo_bpm_slider"] = DEFAULT_BPM
 
+if "autoplay_after_play" not in st.session_state:
+    st.session_state["autoplay_after_play"] = False
+
+playback_intent = st.query_params.get("playback_intent")
+
+if isinstance(playback_intent, list):
+    playback_intent = playback_intent[0]
+
+if playback_intent == "play":
+    st.session_state["autoplay_after_play"] = True
+elif playback_intent == "pause":
+    st.session_state["autoplay_after_play"] = False
+
 tempo_percent = (
     (st.session_state["tempo_bpm"] - MIN_BPM)
     / (MAX_BPM - MIN_BPM)
@@ -377,6 +390,7 @@ if visualization == "Horizontal Timeline":
         SUBDIVISION_OPTIONS[subdivision_guides],
         st.session_state["muted_high_beats"],
         st.session_state["muted_low_beats"],
+        st.session_state["autoplay_after_play"],
     )
 else:
     show_polyrhythm_clock(
@@ -388,4 +402,5 @@ else:
         SUBDIVISION_OPTIONS[subdivision_guides],
         st.session_state["muted_high_beats"],
         st.session_state["muted_low_beats"],
+        st.session_state["autoplay_after_play"],
     )
