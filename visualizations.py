@@ -505,7 +505,7 @@ def show_polyrhythm_clock(
 
     high_lines = division_lines(
         high_beats,
-        "#E00000",
+        "#006DFF",
         "high-clock",
         30,
         68,
@@ -513,7 +513,7 @@ def show_polyrhythm_clock(
     )
     low_lines = division_lines(
         low_beats,
-        "#006DFF",
+        "#E00000",
         "low-clock",
         88,
         128,
@@ -717,8 +717,8 @@ def show_polyrhythm_clock(
             </svg>
             <div class="clock-legend">
                 <div class="legend-item"><span class="legend-swatch black"></span> Black Hand = Measure Position</div>
-                <div class="legend-item"><span class="legend-swatch red"></span> Red Inner Ring = High Rhythm</div>
-                <div class="legend-item"><span class="legend-swatch blue"></span> Blue Outer Ring = Low Rhythm</div>
+                <div class="legend-item"><span class="legend-swatch blue"></span> Blue Inner Ring = High Rhythm</div>
+                <div class="legend-item"><span class="legend-swatch red"></span> Red Outer Ring = Low Rhythm</div>
             </div>
         </div>
         <div class="loop-note">

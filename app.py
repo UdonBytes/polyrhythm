@@ -10,6 +10,7 @@ LOOPS = 4
 MIN_BPM = 40
 MAX_BPM = 240
 DEFAULT_BPM = 120
+MAX_BEATS = 32
 SLIDER_FILL_COLOR = "#8fa3b8"
 SLIDER_REST_COLOR = "#f5f5f5"
 SUBDIVISION_OPTIONS = {
@@ -125,6 +126,40 @@ st.markdown(
             padding: 0.25rem 0.8rem;
             white-space: nowrap;
         }}
+
+        .beat-mute-label {{
+            font-weight: 600;
+            margin-top: 0.8rem;
+            margin-bottom: 0.45rem;
+        }}
+
+        div[data-testid="stPills"] button {{
+            min-width: 2.45rem;
+            padding: 0.35rem 0.55rem;
+        }}
+
+        div[data-testid="stPills"] button p {{
+            line-height: 1.1;
+            text-align: center;
+            white-space: pre-line;
+        }}
+
+        button[kind="pillsActive"] {{
+            background: #9ca3af !important;
+            background-color: #9ca3af !important;
+            border-color: #d1d5db !important;
+            box-shadow: 0 0 0 2px rgba(209, 213, 219, 0.45) !important;
+        }}
+
+        button[kind="pillsActive"] * {{
+            background-color: transparent !important;
+        }}
+
+        button[kind="pillsActive"] p {{
+            color: #ffffff !important;
+            filter: grayscale(1);
+            font-weight: 700;
+        }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -160,6 +195,27 @@ def toggle_beat_mute(state_key, beat_index):
 def reset_all_mutes(high_beat_count, low_beat_count):
     st.session_state["muted_high_beats"] = [False] * high_beat_count
     st.session_state["muted_low_beats"] = [False] * low_beat_count
+    st.session_state[get_mute_pills_key("muted_high_beats", high_beat_count)] = []
+    st.session_state[get_mute_pills_key("muted_low_beats", low_beat_count)] = []
+
+
+def get_mute_pills_key(state_key, beat_count):
+    return f"{state_key}_pills_{beat_count}"
+
+
+def sync_mute_state_from_pills(state_key):
+    beat_count = len(st.session_state[state_key])
+    pills_key = get_mute_pills_key(state_key, beat_count)
+    selected_muted_beats = st.session_state.get(pills_key)
+
+    if selected_muted_beats is None:
+        return
+
+    selected_muted_set = set(selected_muted_beats)
+    st.session_state[state_key] = [
+        beat_number in selected_muted_set
+        for beat_number in range(1, beat_count + 1)
+    ]
 
 
 def show_beat_mute_buttons(label, state_key, beat_count):
@@ -184,6 +240,49 @@ def show_beat_mute_buttons(label, state_key, beat_count):
             )
 
 
+def update_mutes_from_pills(state_key, beat_count):
+    pills_key = get_mute_pills_key(state_key, beat_count)
+    selected_muted_beats = st.session_state.get(pills_key) or []
+    selected_muted_set = set(selected_muted_beats)
+
+    st.session_state[state_key] = [
+        beat_number in selected_muted_set
+        for beat_number in range(1, beat_count + 1)
+    ]
+
+
+def show_beat_mute_pills(label, state_key, beat_symbol):
+    muted_beats = st.session_state[state_key]
+    beat_count = len(muted_beats)
+    beat_numbers = list(range(1, beat_count + 1))
+    muted_numbers = [
+        beat_number
+        for beat_number, is_muted in zip(beat_numbers, muted_beats)
+        if is_muted
+    ]
+    pills_key = get_mute_pills_key(state_key, beat_count)
+
+    if pills_key not in st.session_state:
+        st.session_state[pills_key] = muted_numbers
+
+    st.markdown(
+        f'<div class="beat-mute-label">{label} ({beat_count})</div>',
+        unsafe_allow_html=True,
+    )
+    st.pills(
+        f"Muted {label}",
+        beat_numbers,
+        selection_mode="multi",
+        default=muted_numbers,
+        format_func=lambda beat_number: f"{beat_symbol} {beat_number}",
+        key=pills_key,
+        label_visibility="collapsed",
+        help="Selected beat numbers are muted.",
+        on_change=update_mutes_from_pills,
+        args=(state_key, beat_count),
+    )
+
+
 st.number_input(
     "Tempo/BPM",
     min_value=MIN_BPM,
@@ -200,8 +299,18 @@ st.slider(
     label_visibility="collapsed",
 )
 bpm = st.session_state["tempo_bpm"]
-high_beats = st.number_input("High Woodblock Beats", min_value=1, max_value=20, value=2)
-low_beats = st.number_input("Low Woodblock Beats", min_value=1, max_value=20, value=3)
+high_beats = st.number_input(
+    "High Woodblock Beats",
+    min_value=1,
+    max_value=MAX_BEATS,
+    value=2,
+)
+low_beats = st.number_input(
+    "Low Woodblock Beats",
+    min_value=1,
+    max_value=MAX_BEATS,
+    value=3,
+)
 visualization = st.selectbox(
     "Visualization",
     ["Horizontal Timeline", "Polyrhythm Clock"],
@@ -222,32 +331,31 @@ reset_mutes_when_beat_count_changes(
     "previous_low_beat_count",
     low_beats,
 )
+sync_mute_state_from_pills("muted_high_beats")
+sync_mute_state_from_pills("muted_low_beats")
 
 has_muted_beats = any(st.session_state["muted_high_beats"]) or any(
     st.session_state["muted_low_beats"]
 )
-mute_heading, mute_reset = st.columns([4, 1.4])
-mute_heading.markdown(
-    '<span id="beat-mutes-heading"></span><h3>Beat Mutes</h3>',
-    unsafe_allow_html=True,
-)
-mute_reset.button(
-    "Reset Mutes",
-    disabled=not has_muted_beats,
-    use_container_width=True,
-    on_click=reset_all_mutes,
-    args=(high_beats, low_beats),
-)
-show_beat_mute_buttons(
-    "High Woodblock Beats",
-    "muted_high_beats",
-    high_beats,
-)
-show_beat_mute_buttons(
-    "Low Woodblock Beats",
-    "muted_low_beats",
-    low_beats,
-)
+with st.expander("Beat Mutes", expanded=True):
+    st.button(
+        "Reset Mutes",
+        disabled=not has_muted_beats,
+        use_container_width=True,
+        on_click=reset_all_mutes,
+        args=(high_beats, low_beats),
+    )
+    st.caption("Select beat numbers to mute them.")
+    show_beat_mute_pills(
+        "High Woodblock Beats",
+        "muted_high_beats",
+        "🔵",
+    )
+    show_beat_mute_pills(
+        "Low Woodblock Beats",
+        "muted_low_beats",
+        "🔴",
+    )
 
 measure_seconds = get_measure_seconds(bpm, "Quarter", BEATS_PER_MEASURE)
 audio_bytes = generate_polyrhythm_audio(
