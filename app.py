@@ -337,7 +337,7 @@ sync_mute_state_from_pills("muted_low_beats")
 has_muted_beats = any(st.session_state["muted_high_beats"]) or any(
     st.session_state["muted_low_beats"]
 )
-with st.expander("Beat Mutes", expanded=True):
+with st.expander("Beat Mutes", expanded=False):
     st.button(
         "Reset Mutes",
         disabled=not has_muted_beats,
