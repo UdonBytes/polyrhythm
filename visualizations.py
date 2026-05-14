@@ -647,15 +647,33 @@ def show_polyrhythm_clock(
             .clock-panel {{
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 0.5rem;
+                padding: 0.75rem;
             }}
 
             .clock-face {{
-                width: 100%;
+                width: min(100%, 270px);
+                align-self: center;
             }}
 
             .clock-legend {{
-                font-size: 13px;
-                line-height: 1.6;
+                font-size: 11px;
+                line-height: 1.35;
+            }}
+
+            .legend-swatch {{
+                width: 14px;
+                height: 3px;
+            }}
+
+            .loop-note {{
+                font-size: 12px;
+                line-height: 1.25;
+                margin-top: 0.35rem;
+            }}
+
+            .audio-controls {{
+                margin-top: 0.55rem;
             }}
         }}
     </style>
@@ -704,21 +722,6 @@ def show_polyrhythm_clock(
         let startedAt = 0;
         let pausedAt = 0;
         let animationFrameId = null;
-
-        function setClockFrameHeight() {{
-            const mobileHeight = 700;
-            const desktopHeight = 530;
-            const isMobileLayout = window.matchMedia("(max-width: 420px)").matches;
-
-            window.parent.postMessage(
-                {{
-                    isStreamlitMessage: true,
-                    type: "streamlit:setFrameHeight",
-                    height: isMobileLayout ? mobileHeight : desktopHeight,
-                }},
-                "*"
-            );
-        }}
 
         function base64ToArrayBuffer(base64) {{
             const binaryString = window.atob(base64);
@@ -829,9 +832,6 @@ def show_polyrhythm_clock(
             }}
         }});
 
-        window.addEventListener("load", setClockFrameHeight);
-        window.addEventListener("resize", setClockFrameHeight);
-        setClockFrameHeight();
         updateClock();
     </script>
     """
