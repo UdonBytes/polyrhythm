@@ -50,11 +50,12 @@ def show_animated_timeline(
 
         return html
 
-    subdivision_lines_html = ""
+    subdivision_lines_html = """
+            <span class="subdivision-line downbeat-line" style="left: 0%;"></span>
+    """
 
     if subdivision_count > 0:
-        subdivision_lines_html = """
-            <span class="subdivision-line downbeat-line" style="left: 0%;"></span>
+        subdivision_lines_html += """
             <span class="subdivision-line measure-end-line" style="left: 100%;"></span>
         """
 
