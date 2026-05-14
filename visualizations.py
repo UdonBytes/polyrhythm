@@ -209,8 +209,15 @@ def show_animated_timeline(
         .audio-controls {{
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            justify-content: space-between;
+            gap: 1rem;
             margin-top: 0.9rem;
+        }}
+
+        .playback-controls {{
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }}
 
         .play-button {{
@@ -223,6 +230,20 @@ def show_animated_timeline(
             font-weight: 700;
             min-width: 88px;
             padding: 0.6rem 1rem;
+        }}
+
+        .download-link {{
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            color: #f5f5f5;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 0.6rem 1rem;
+            text-decoration: none;
+        }}
+
+        .download-link:hover {{
+            border-color: #a9bccd;
         }}
 
         .time-label {{
@@ -251,8 +272,15 @@ def show_animated_timeline(
             Press Play To Hear The Rhythm And Watch The Playhead Follow The Beat.
         </div>
         <div class="audio-controls">
-            <button class="play-button" id="play-button">Play</button>
-            <span class="time-label" id="time-label">0:00</span>
+            <div class="playback-controls">
+                <button class="play-button" id="play-button">Play</button>
+                <span class="time-label" id="time-label">0:00</span>
+            </div>
+            <a
+                class="download-link"
+                href="data:audio/wav;base64,{audio_base64}"
+                download="polyrhythm.wav"
+            >Download WAV</a>
         </div>
     </div>
 
@@ -622,8 +650,15 @@ def show_polyrhythm_clock(
         .audio-controls {{
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            justify-content: space-between;
+            gap: 1rem;
             margin-top: 0.9rem;
+        }}
+
+        .playback-controls {{
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }}
 
         .play-button {{
@@ -638,47 +673,29 @@ def show_polyrhythm_clock(
             padding: 0.6rem 1rem;
         }}
 
+        .download-link {{
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            color: #f5f5f5;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 0.6rem 1rem;
+            text-decoration: none;
+        }}
+
+        .download-link:hover {{
+            border-color: #a9bccd;
+        }}
+
         .time-label {{
             color: #cfcfcf;
             font-size: 14px;
         }}
 
-        @media (max-width: 700px) {{
+        @media (max-width: 420px) {{
             .clock-panel {{
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 0.35rem;
-                padding: 0.65rem;
-            }}
-
-            .clock-face {{
-                width: min(100%, 220px);
-                align-self: center;
-            }}
-
-            .clock-legend {{
-                font-size: 10px;
-                line-height: 1.25;
-            }}
-
-            .legend-swatch {{
-                width: 12px;
-                height: 3px;
-            }}
-
-            .loop-note {{
-                font-size: 11px;
-                line-height: 1.2;
-                margin-top: 0.3rem;
-            }}
-
-            .audio-controls {{
-                margin-top: 0.45rem;
-            }}
-
-            .play-button {{
-                min-width: 76px;
-                padding: 0.45rem 0.85rem;
             }}
         }}
     </style>
@@ -708,8 +725,15 @@ def show_polyrhythm_clock(
             Press Play To Hear The Rhythm And Watch The Hand Rotate Through The Measure.
         </div>
         <div class="audio-controls">
-            <button class="play-button" id="play-button">Play</button>
-            <span class="time-label" id="time-label">0:00</span>
+            <div class="playback-controls">
+                <button class="play-button" id="play-button">Play</button>
+                <span class="time-label" id="time-label">0:00</span>
+            </div>
+            <a
+                class="download-link"
+                href="data:audio/wav;base64,{audio_base64}"
+                download="polyrhythm.wav"
+            >Download WAV</a>
         </div>
     </div>
 

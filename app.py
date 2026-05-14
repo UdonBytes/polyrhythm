@@ -281,11 +281,3 @@ else:
         st.session_state["muted_high_beats"],
         st.session_state["muted_low_beats"],
     )
-
-st.download_button(
-    label="Download WAV",
-    data=audio_bytes,
-    file_name="polyrhythm.wav",
-    mime="audio/wav",
-    on_click="ignore",
-)
