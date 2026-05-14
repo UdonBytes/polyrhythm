@@ -277,6 +277,8 @@ else:
         measure_seconds,
         audio_bytes,
         SUBDIVISION_OPTIONS[subdivision_guides],
+        st.session_state["muted_high_beats"],
+        st.session_state["muted_low_beats"],
     )
 
 st.download_button(

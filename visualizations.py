@@ -398,8 +398,16 @@ def show_polyrhythm_clock(
     measure_seconds,
     audio_bytes,
     subdivision_count=0,
+    muted_high_beats=None,
+    muted_low_beats=None,
 ):
     """Draw a clock-style rhythm visual with a rotating playhead."""
+    if muted_high_beats is None:
+        muted_high_beats = [False] * high_beats
+
+    if muted_low_beats is None:
+        muted_low_beats = [False] * low_beats
+
     audio_base64 = get_audio_base64(audio_bytes)
 
     def clock_point(angle_degrees, radius):
@@ -409,7 +417,14 @@ def show_polyrhythm_clock(
 
         return x, y
 
-    def division_lines(number_of_beats, color, rhythm_name, inner_radius, outer_radius):
+    def division_lines(
+        number_of_beats,
+        color,
+        rhythm_name,
+        inner_radius,
+        outer_radius,
+        muted_beats,
+    ):
         lines = ""
 
         for i in range(number_of_beats):
@@ -418,16 +433,19 @@ def show_polyrhythm_clock(
             x2, y2 = clock_point(angle, outer_radius)
             beat_time = i * measure_seconds / number_of_beats
             downbeat_class = " downbeat-tick" if i == 0 else ""
+            muted_class = " muted-tick" if muted_beats[i] else ""
+            muted_text = "true" if muted_beats[i] else "false"
 
             lines += f"""
             <line
-                class="division-tick {rhythm_name}{downbeat_class}"
+                class="division-tick {rhythm_name}{downbeat_class}{muted_class}"
                 x1="{x1:.2f}"
                 y1="{y1:.2f}"
                 x2="{x2:.2f}"
                 y2="{y2:.2f}"
                 stroke="{color}"
                 data-beat-time="{beat_time}"
+                data-muted="{muted_text}"
             />
             """
 
@@ -457,8 +475,22 @@ def show_polyrhythm_clock(
 
         return lines
 
-    high_lines = division_lines(high_beats, "#E00000", "high-clock", 30, 68)
-    low_lines = division_lines(low_beats, "#006DFF", "low-clock", 88, 128)
+    high_lines = division_lines(
+        high_beats,
+        "#E00000",
+        "high-clock",
+        30,
+        68,
+        muted_high_beats,
+    )
+    low_lines = division_lines(
+        low_beats,
+        "#006DFF",
+        "low-clock",
+        88,
+        128,
+        muted_low_beats,
+    )
     subdivision_ticks = subdivision_lines(subdivision_count)
 
     html = f"""
@@ -512,6 +544,16 @@ def show_polyrhythm_clock(
         .downbeat-tick {{
             stroke: #111111;
             stroke-width: 7;
+        }}
+
+        .muted-tick {{
+            stroke: #9a9a9a;
+            opacity: 0.45;
+        }}
+
+        .downbeat-tick.muted-tick {{
+            stroke: #9a9a9a;
+            opacity: 0.45;
         }}
 
         .active-tick {{
@@ -704,6 +746,11 @@ def show_polyrhythm_clock(
             timeLabel.textContent = formatTime(playbackTime);
 
             ticks.forEach(function(tick) {{
+                if (tick.dataset.muted === "true") {{
+                    tick.classList.remove("active-tick");
+                    return;
+                }}
+
                 const beatTime = Number(tick.dataset.beatTime);
                 const distance = Math.abs(measureTime - beatTime);
                 const wrappedDistance = Math.min(distance, measureSeconds - distance);
