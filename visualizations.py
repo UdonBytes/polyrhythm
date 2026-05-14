@@ -643,37 +643,42 @@ def show_polyrhythm_clock(
             font-size: 14px;
         }}
 
-        @media (max-width: 420px) {{
+        @media (max-width: 700px) {{
             .clock-panel {{
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 0.5rem;
-                padding: 0.75rem;
+                gap: 0.35rem;
+                padding: 0.65rem;
             }}
 
             .clock-face {{
-                width: min(100%, 270px);
+                width: min(100%, 220px);
                 align-self: center;
             }}
 
             .clock-legend {{
-                font-size: 11px;
-                line-height: 1.35;
+                font-size: 10px;
+                line-height: 1.25;
             }}
 
             .legend-swatch {{
-                width: 14px;
+                width: 12px;
                 height: 3px;
             }}
 
             .loop-note {{
-                font-size: 12px;
-                line-height: 1.25;
-                margin-top: 0.35rem;
+                font-size: 11px;
+                line-height: 1.2;
+                margin-top: 0.3rem;
             }}
 
             .audio-controls {{
-                margin-top: 0.55rem;
+                margin-top: 0.45rem;
+            }}
+
+            .play-button {{
+                min-width: 76px;
+                padding: 0.45rem 0.85rem;
             }}
         }}
     </style>
