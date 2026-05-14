@@ -390,7 +390,7 @@ if visualization == "Horizontal Timeline":
         SUBDIVISION_OPTIONS[subdivision_guides],
         st.session_state["muted_high_beats"],
         st.session_state["muted_low_beats"],
-        st.session_state["autoplay_after_play"],
+        should_autoplay=st.session_state["autoplay_after_play"],
     )
 else:
     show_polyrhythm_clock(
@@ -402,5 +402,5 @@ else:
         SUBDIVISION_OPTIONS[subdivision_guides],
         st.session_state["muted_high_beats"],
         st.session_state["muted_low_beats"],
-        st.session_state["autoplay_after_play"],
+        should_autoplay=st.session_state["autoplay_after_play"],
     )
