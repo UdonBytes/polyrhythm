@@ -17,23 +17,34 @@ def show_animated_timeline(
     measure_seconds,
     audio_bytes,
     subdivision_count=0,
+    muted_high_beats=None,
+    muted_low_beats=None,
 ):
     """Draw an animated timeline with a playhead synced to the audio player."""
+    if muted_high_beats is None:
+        muted_high_beats = [False] * high_beats
+
+    if muted_low_beats is None:
+        muted_low_beats = [False] * low_beats
+
     high_markers = get_beat_marker_positions(high_beats, beats_per_measure)
     low_markers = get_beat_marker_positions(low_beats, beats_per_measure)
     audio_base64 = get_audio_base64(audio_bytes)
 
-    def marker_html(positions, row_name):
+    def marker_html(positions, row_name, muted_beats):
         html = ""
 
-        for position in positions:
+        for beat_number, position in enumerate(positions):
             beat_time = position / 100 * measure_seconds
             downbeat_class = " downbeat-marker" if position == 0 else ""
+            muted_class = " muted-marker" if muted_beats[beat_number] else ""
+            muted_text = "true" if muted_beats[beat_number] else "false"
             html += f"""
             <span
-                class="beat-marker {row_name}{downbeat_class}"
+                class="beat-marker {row_name}{downbeat_class}{muted_class}"
                 style="left: {position}%;"
                 data-beat-time="{beat_time}"
+                data-muted="{muted_text}"
             ></span>
             """
 
@@ -156,6 +167,13 @@ def show_animated_timeline(
             background: #C44536;
         }}
 
+        .muted-marker.high,
+        .muted-marker.low {{
+            background: #ffffff;
+            border-color: #9a9a9a;
+            opacity: 0.75;
+        }}
+
         .downbeat-marker {{
             width: 28px;
             height: 28px;
@@ -218,10 +236,10 @@ def show_animated_timeline(
             <div class="row-label high-label">High</div>
             <div class="row-label low-label">Low</div>
             <div class="rhythm-row high-row">
-                {marker_html(high_markers, "high")}
+                {marker_html(high_markers, "high", muted_high_beats)}
             </div>
             <div class="rhythm-row low-row">
-                {marker_html(low_markers, "low")}
+                {marker_html(low_markers, "low", muted_low_beats)}
             </div>
             <div class="playhead"></div>
         </div>
@@ -303,6 +321,11 @@ def show_animated_timeline(
             timeLabel.textContent = formatTime(playbackTime);
 
             markers.forEach(function(marker) {{
+                if (marker.dataset.muted === "true") {{
+                    marker.classList.remove("active-marker");
+                    return;
+                }}
+
                 const beatTime = Number(marker.dataset.beatTime);
                 const distance = Math.abs(measureTime - beatTime);
                 const wrappedDistance = Math.min(distance, measureSeconds - distance);

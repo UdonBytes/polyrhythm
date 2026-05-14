@@ -147,6 +147,44 @@ def update_tempo_from_slider():
     st.session_state["tempo_bpm_number"] = st.session_state["tempo_bpm_slider"]
 
 
+def reset_mutes_when_beat_count_changes(state_key, count_key, beat_count):
+    """Reset mutes when the generated beat count changes."""
+    current_mutes = st.session_state.get(state_key, [])
+    previous_count = st.session_state.get(count_key)
+
+    if previous_count != beat_count or len(current_mutes) != beat_count:
+        st.session_state[state_key] = [False] * beat_count
+        st.session_state[count_key] = beat_count
+
+
+def toggle_beat_mute(state_key, beat_index):
+    st.session_state[state_key][beat_index] = (
+        not st.session_state[state_key][beat_index]
+    )
+
+
+def show_beat_mute_buttons(label, state_key, beat_count):
+    st.write(label)
+
+    for row_start in range(0, beat_count, 10):
+        row_end = min(row_start + 10, beat_count)
+        columns = st.columns(row_end - row_start)
+
+        for column, beat_index in zip(columns, range(row_start, row_end)):
+            is_muted = st.session_state[state_key][beat_index]
+            button_label = "○" if is_muted else "●"
+            help_text = f"Toggle Beat {beat_index + 1}"
+
+            column.button(
+                button_label,
+                key=f"{state_key}_{beat_index}",
+                help=help_text,
+                use_container_width=True,
+                on_click=toggle_beat_mute,
+                args=(state_key, beat_index),
+            )
+
+
 st.number_input(
     "Tempo/BPM",
     min_value=MIN_BPM,
@@ -175,64 +213,76 @@ subdivision_guides = st.selectbox(
     index=0,
 )
 
-if st.button("Generate"):
-    st.session_state["generated_rhythm"] = {
-        "bpm": bpm,
-        "high_beats": high_beats,
-        "low_beats": low_beats,
-    }
+reset_mutes_when_beat_count_changes(
+    "muted_high_beats",
+    "previous_high_beat_count",
+    high_beats,
+)
+reset_mutes_when_beat_count_changes(
+    "muted_low_beats",
+    "previous_low_beat_count",
+    low_beats,
+)
 
-if "generated_rhythm" in st.session_state:
-    rhythm = st.session_state["generated_rhythm"]
-    base_bpm = rhythm.get("bpm", bpm)
+effective_bpm = bpm * playback_speed_percent / 100
+playback_speed_label = f"Playback Speed (%) - {effective_bpm:g} Effective BPM"
+playback_speed_percent = st.slider(
+    playback_speed_label,
+    min_value=MIN_PLAYBACK_SPEED_PERCENT,
+    max_value=MAX_PLAYBACK_SPEED_PERCENT,
+    value=DEFAULT_PLAYBACK_SPEED_PERCENT,
+    format="%d%%",
+    key="playback_speed_slider",
+)
+effective_bpm = bpm * playback_speed_percent / 100
 
-    st.success("Done!")
+st.subheader("Beat Mutes")
+show_beat_mute_buttons(
+    "High Woodblock Beats",
+    "muted_high_beats",
+    high_beats,
+)
+show_beat_mute_buttons(
+    "Low Woodblock Beats",
+    "muted_low_beats",
+    low_beats,
+)
 
-    effective_bpm = base_bpm * playback_speed_percent / 100
-    playback_speed_label = (
-        f"Playback Speed (%) - {effective_bpm:g} Effective BPM"
-    )
-    playback_speed_percent = st.slider(
-        playback_speed_label,
-        min_value=MIN_PLAYBACK_SPEED_PERCENT,
-        max_value=MAX_PLAYBACK_SPEED_PERCENT,
-        value=DEFAULT_PLAYBACK_SPEED_PERCENT,
-        format="%d%%",
-        key="playback_speed_slider",
-    )
-    effective_bpm = base_bpm * playback_speed_percent / 100
+measure_seconds = get_measure_seconds(effective_bpm, "Quarter", BEATS_PER_MEASURE)
+audio_bytes = generate_polyrhythm_audio(
+    high_beats,
+    low_beats,
+    measure_seconds,
+    LOOPS,
+    st.session_state["muted_high_beats"],
+    st.session_state["muted_low_beats"],
+)
 
-    measure_seconds = get_measure_seconds(effective_bpm, "Quarter", BEATS_PER_MEASURE)
-    audio_bytes = generate_polyrhythm_audio(
-        rhythm["high_beats"],
-        rhythm["low_beats"],
+if visualization == "Horizontal Timeline":
+    show_animated_timeline(
+        high_beats,
+        low_beats,
+        BEATS_PER_MEASURE,
         measure_seconds,
-        LOOPS,
+        audio_bytes,
+        SUBDIVISION_OPTIONS[subdivision_guides],
+        st.session_state["muted_high_beats"],
+        st.session_state["muted_low_beats"],
+    )
+else:
+    show_polyrhythm_clock(
+        high_beats,
+        low_beats,
+        BEATS_PER_MEASURE,
+        measure_seconds,
+        audio_bytes,
+        SUBDIVISION_OPTIONS[subdivision_guides],
     )
 
-    if visualization == "Horizontal Timeline":
-        show_animated_timeline(
-            rhythm["high_beats"],
-            rhythm["low_beats"],
-            BEATS_PER_MEASURE,
-            measure_seconds,
-            audio_bytes,
-            SUBDIVISION_OPTIONS[subdivision_guides],
-        )
-    else:
-        show_polyrhythm_clock(
-            rhythm["high_beats"],
-            rhythm["low_beats"],
-            BEATS_PER_MEASURE,
-            measure_seconds,
-            audio_bytes,
-            SUBDIVISION_OPTIONS[subdivision_guides],
-        )
-
-    st.download_button(
-        label="Download WAV",
-        data=audio_bytes,
-        file_name="polyrhythm.wav",
-        mime="audio/wav",
-        on_click="ignore",
-    )
+st.download_button(
+    label="Download WAV",
+    data=audio_bytes,
+    file_name="polyrhythm.wav",
+    mime="audio/wav",
+    on_click="ignore",
+)
