@@ -131,6 +131,22 @@ st.markdown(
             box-shadow: 0 0 0 1px {SLIDER_FILL_COLOR} !important;
             outline-color: {SLIDER_FILL_COLOR} !important;
         }}
+
+        div[data-testid="stHorizontalBlock"]:has(#beat-mutes-heading) {{
+            align-items: flex-start;
+        }}
+
+        div[data-testid="stHorizontalBlock"]:has(#beat-mutes-heading) h3 {{
+            margin-top: 0;
+            margin-bottom: 0;
+        }}
+
+        div[data-testid="stHorizontalBlock"]:has(#beat-mutes-heading) button {{
+            margin-top: 2.05rem;
+            min-height: 2.25rem;
+            padding: 0.25rem 0.8rem;
+            white-space: nowrap;
+        }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -161,6 +177,11 @@ def toggle_beat_mute(state_key, beat_index):
     st.session_state[state_key][beat_index] = (
         not st.session_state[state_key][beat_index]
     )
+
+
+def reset_all_mutes(high_beat_count, low_beat_count):
+    st.session_state["muted_high_beats"] = [False] * high_beat_count
+    st.session_state["muted_low_beats"] = [False] * low_beat_count
 
 
 def show_beat_mute_buttons(label, state_key, beat_count):
@@ -236,7 +257,21 @@ playback_speed_percent = st.slider(
 )
 effective_bpm = bpm * playback_speed_percent / 100
 
-st.subheader("Beat Mutes")
+has_muted_beats = any(st.session_state["muted_high_beats"]) or any(
+    st.session_state["muted_low_beats"]
+)
+mute_heading, mute_reset = st.columns([4, 1.4])
+mute_heading.markdown(
+    '<span id="beat-mutes-heading"></span><h3>Beat Mutes</h3>',
+    unsafe_allow_html=True,
+)
+mute_reset.button(
+    "Reset Mutes",
+    disabled=not has_muted_beats,
+    use_container_width=True,
+    on_click=reset_all_mutes,
+    args=(high_beats, low_beats),
+)
 show_beat_mute_buttons(
     "High Woodblock Beats",
     "muted_high_beats",
