@@ -10,9 +10,6 @@ LOOPS = 4
 MIN_BPM = 40
 MAX_BPM = 240
 DEFAULT_BPM = 120
-MIN_PLAYBACK_SPEED_PERCENT = 50
-MAX_PLAYBACK_SPEED_PERCENT = 200
-DEFAULT_PLAYBACK_SPEED_PERCENT = 100
 SLIDER_FILL_COLOR = "#8fa3b8"
 SLIDER_REST_COLOR = "#f5f5f5"
 SUBDIVISION_OPTIONS = {
@@ -34,15 +31,6 @@ tempo_percent = (
     / (MAX_BPM - MIN_BPM)
     * 100
 )
-playback_speed_percent = st.session_state.get(
-    "playback_speed_slider",
-    DEFAULT_PLAYBACK_SPEED_PERCENT,
-)
-playback_speed_fill_percent = (
-    (playback_speed_percent - MIN_PLAYBACK_SPEED_PERCENT)
-    / (MAX_PLAYBACK_SPEED_PERCENT - MIN_PLAYBACK_SPEED_PERCENT)
-    * 100
-)
 
 st.markdown(
     f"""
@@ -58,16 +46,6 @@ st.markdown(
                 {SLIDER_FILL_COLOR} 0%,
                 {SLIDER_FILL_COLOR} {tempo_percent}%,
                 {SLIDER_REST_COLOR} {tempo_percent}%,
-                {SLIDER_REST_COLOR} 100%
-            ) !important;
-        }}
-
-        div[data-testid="stSlider"]:has([aria-label^="Playback Speed (%)"]) [data-baseweb="slider"] div[style="height: 0.25rem;"] {{
-            background: linear-gradient(
-                to right,
-                {SLIDER_FILL_COLOR} 0%,
-                {SLIDER_FILL_COLOR} {playback_speed_fill_percent}%,
-                {SLIDER_REST_COLOR} {playback_speed_fill_percent}%,
                 {SLIDER_REST_COLOR} 100%
             ) !important;
         }}
@@ -245,18 +223,6 @@ reset_mutes_when_beat_count_changes(
     low_beats,
 )
 
-effective_bpm = bpm * playback_speed_percent / 100
-playback_speed_label = f"Playback Speed (%) - {effective_bpm:g} Effective BPM"
-playback_speed_percent = st.slider(
-    playback_speed_label,
-    min_value=MIN_PLAYBACK_SPEED_PERCENT,
-    max_value=MAX_PLAYBACK_SPEED_PERCENT,
-    value=DEFAULT_PLAYBACK_SPEED_PERCENT,
-    format="%d%%",
-    key="playback_speed_slider",
-)
-effective_bpm = bpm * playback_speed_percent / 100
-
 has_muted_beats = any(st.session_state["muted_high_beats"]) or any(
     st.session_state["muted_low_beats"]
 )
@@ -283,7 +249,7 @@ show_beat_mute_buttons(
     low_beats,
 )
 
-measure_seconds = get_measure_seconds(effective_bpm, "Quarter", BEATS_PER_MEASURE)
+measure_seconds = get_measure_seconds(bpm, "Quarter", BEATS_PER_MEASURE)
 audio_bytes = generate_polyrhythm_audio(
     high_beats,
     low_beats,
