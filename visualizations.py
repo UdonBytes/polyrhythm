@@ -138,15 +138,17 @@ def show_animated_timeline(
             left: 16px;
             width: 64px;
             font-size: 13px;
+            line-height: 20px;
             color: #333333;
+            transform: translateY(-50%);
         }}
 
         .high-label {{
-            top: 48px;
+            top: 58px;
         }}
 
         .low-label {{
-            top: 108px;
+            top: 118px;
         }}
 
         .beat-marker {{
@@ -154,6 +156,7 @@ def show_animated_timeline(
             top: -10px;
             width: 20px;
             height: 20px;
+            box-sizing: border-box;
             transform: translateX(-50%);
             border: 2px solid #111111;
             border-radius: 50%;
