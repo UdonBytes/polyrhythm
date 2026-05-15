@@ -534,6 +534,18 @@ with st.expander("Beat Mutes", expanded=False):
         )
 
 measure_seconds = get_measure_seconds(bpm, "Quarter", BEATS_PER_MEASURE)
+audio_options = {}
+
+if use_tambourine:
+    audio_options["tambourine_beats"] = tambourine_beats
+    audio_options["muted_tambourine_beats"] = (
+        st.session_state["muted_tambourine_beats"]
+    )
+
+if use_hihat:
+    audio_options["hihat_beats"] = hihat_beats
+    audio_options["muted_hihat_beats"] = st.session_state["muted_hihat_beats"]
+
 audio_bytes = generate_polyrhythm_audio(
     high_beats,
     low_beats,
@@ -541,18 +553,7 @@ audio_bytes = generate_polyrhythm_audio(
     LOOPS,
     st.session_state["muted_high_beats"],
     st.session_state["muted_low_beats"],
-    tambourine_beats=tambourine_beats,
-    hihat_beats=hihat_beats,
-    muted_tambourine_beats=(
-        st.session_state["muted_tambourine_beats"]
-        if use_tambourine
-        else None
-    ),
-    muted_hihat_beats=(
-        st.session_state["muted_hihat_beats"]
-        if use_hihat
-        else None
-    ),
+    **audio_options,
 )
 
 if visualization == "Horizontal Timeline":
