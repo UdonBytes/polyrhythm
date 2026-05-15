@@ -33,6 +33,9 @@ if "autoplay_after_play" not in st.session_state:
 if "has_started_playback" not in st.session_state:
     st.session_state["has_started_playback"] = False
 
+if "extra_track_count" not in st.session_state:
+    st.session_state["extra_track_count"] = 0
+
 playback_intent = st.query_params.get("playback_intent")
 
 if isinstance(playback_intent, list):
@@ -44,9 +47,15 @@ if playback_intent == "play":
 elif playback_intent == "pause":
     st.session_state["autoplay_after_play"] = False
 
+current_playback_intent = (
+    playback_intent
+    if playback_intent in ("play", "pause")
+    else ""
+)
 should_autoplay_audio = (
     st.session_state["has_started_playback"]
     and st.session_state["autoplay_after_play"]
+    and current_playback_intent != "pause"
 )
 
 tempo_percent = (
@@ -198,6 +207,35 @@ def update_tempo_from_slider():
     st.session_state["tempo_bpm_number"] = st.session_state["tempo_bpm_slider"]
 
 
+def add_extra_track():
+    st.session_state["extra_track_count"] = min(
+        st.session_state["extra_track_count"] + 1,
+        2,
+    )
+
+
+def clear_mute_pills_for_state(state_key):
+    for key in list(st.session_state.keys()):
+        if key.startswith(f"{state_key}_pills_"):
+            del st.session_state[key]
+
+
+def remove_extra_track():
+    if st.session_state["extra_track_count"] == 2:
+        st.session_state["muted_hihat_beats"] = []
+        clear_mute_pills_for_state("muted_hihat_beats")
+        st.session_state.pop("previous_hihat_beat_count", None)
+    elif st.session_state["extra_track_count"] == 1:
+        st.session_state["muted_tambourine_beats"] = []
+        clear_mute_pills_for_state("muted_tambourine_beats")
+        st.session_state.pop("previous_tambourine_beat_count", None)
+
+    st.session_state["extra_track_count"] = max(
+        st.session_state["extra_track_count"] - 1,
+        0,
+    )
+
+
 def reset_mutes_when_beat_count_changes(state_key, count_key, beat_count):
     """Reset mutes when the generated beat count changes."""
     current_mutes = st.session_state.get(state_key, [])
@@ -336,39 +374,81 @@ st.slider(
     label_visibility="collapsed",
 )
 bpm = st.session_state["tempo_bpm"]
-high_beats = st.number_input(
+
+use_tambourine = st.session_state["extra_track_count"] >= 1
+use_hihat = st.session_state["extra_track_count"] >= 2
+tambourine_beats = None
+hihat_beats = None
+track_columns = [1, 1]
+
+if use_tambourine:
+    track_columns.append(1)
+
+if use_hihat:
+    track_columns.append(1)
+
+if st.session_state["extra_track_count"] < 2:
+    track_columns.append(0.75)
+
+if st.session_state["extra_track_count"] > 0:
+    track_columns.append(0.75)
+
+columns = st.columns(track_columns)
+high_beats = columns[0].number_input(
     "High Woodblock Beats",
     min_value=1,
     max_value=MAX_BEATS,
     value=2,
 )
-low_beats = st.number_input(
+low_beats = columns[1].number_input(
     "Low Woodblock Beats",
     min_value=1,
     max_value=MAX_BEATS,
     value=3,
 )
-use_tambourine = st.checkbox("Add Tambourine Track", value=False)
-tambourine_beats = None
+next_column_index = 2
 
 if use_tambourine:
-    tambourine_beats = st.number_input(
+    tambourine_beats = columns[next_column_index].number_input(
         "Tambourine Beats",
         min_value=1,
         max_value=MAX_BEATS,
         value=4,
     )
-
-use_hihat = st.checkbox("Add Open Hi-Hat Track", value=False)
-hihat_beats = None
+    next_column_index += 1
 
 if use_hihat:
-    hihat_beats = st.number_input(
+    hihat_beats = columns[next_column_index].number_input(
         "Open Hi-Hat Beats",
         min_value=1,
         max_value=MAX_BEATS,
         value=5,
     )
+    next_column_index += 1
+
+if st.session_state["extra_track_count"] < 2:
+    columns[next_column_index].markdown(
+        "<div style='height: 1.75rem'></div>",
+        unsafe_allow_html=True,
+    )
+    columns[next_column_index].button(
+        "+ Add More",
+        on_click=add_extra_track,
+        use_container_width=True,
+    )
+    next_column_index += 1
+
+if st.session_state["extra_track_count"] > 0:
+    columns[next_column_index].markdown(
+        "<div style='height: 1.75rem'></div>",
+        unsafe_allow_html=True,
+    )
+    columns[next_column_index].button(
+        "- Remove",
+        on_click=remove_extra_track,
+        use_container_width=True,
+    )
+
 visualization = st.selectbox(
     "Visualization",
     ["Horizontal Timeline", "Polyrhythm Clock"],
@@ -498,6 +578,7 @@ if visualization == "Horizontal Timeline":
             else None
         ),
         should_autoplay=should_autoplay_audio,
+        playback_intent=current_playback_intent,
     )
 else:
     show_polyrhythm_clock(
@@ -522,4 +603,5 @@ else:
             else None
         ),
         should_autoplay=should_autoplay_audio,
+        playback_intent=current_playback_intent,
     )

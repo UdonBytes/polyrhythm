@@ -24,6 +24,7 @@ def show_animated_timeline(
     muted_tambourine_beats=None,
     muted_hihat_beats=None,
     should_autoplay=False,
+    playback_intent="",
 ):
     """Draw an animated timeline with a playhead synced to the audio player."""
     if muted_high_beats is None:
@@ -307,6 +308,12 @@ def show_animated_timeline(
         <div class="loop-note">
             Press Play To Hear The Rhythm And Watch The Playhead Follow The Beat.
         </div>
+        <audio
+            id="rhythm-audio"
+            src="data:audio/wav;base64,{audio_base64}"
+            loop
+            preload="auto"
+        ></audio>
         <div class="audio-controls">
             <div class="playback-controls">
                 <button class="play-button" id="play-button">Play</button>
@@ -326,47 +333,24 @@ def show_animated_timeline(
         const markers = document.querySelectorAll(".beat-marker");
         const playButton = document.getElementById("play-button");
         const timeLabel = document.getElementById("time-label");
+        const audioPlayer = document.getElementById("rhythm-audio");
         const measureSeconds = {measure_seconds};
-        const audioBase64 = "{audio_base64}";
-        const shouldAutoplay = {str(should_autoplay).lower()};
-        const audioContext = new AudioContext();
-        let audioBuffer = null;
-        let source = null;
+        const shouldAutoplayFromPython = {str(should_autoplay).lower()};
+        const playbackIntentFromPython = "{playback_intent}";
         let isPlaying = false;
-        let startedAt = 0;
-        let pausedAt = 0;
         let animationFrameId = null;
 
-        function base64ToArrayBuffer(base64) {{
-            const binaryString = window.atob(base64);
-            const bytes = new Uint8Array(binaryString.length);
-
-            for (let i = 0; i < binaryString.length; i++) {{
-                bytes[i] = binaryString.charCodeAt(i);
+        function getParentPlaybackIntent() {{
+            try {{
+                const parentUrl = new URL(window.parent.location.href);
+                return parentUrl.searchParams.get("playback_intent") || "";
+            }} catch (error) {{
+                return "";
             }}
-
-            return bytes.buffer;
-        }}
-
-        async function loadAudioBuffer() {{
-            if (audioBuffer === null) {{
-                const audioData = base64ToArrayBuffer(audioBase64);
-                audioBuffer = await audioContext.decodeAudioData(audioData);
-            }}
-
-            return audioBuffer;
         }}
 
         function getPlaybackTime() {{
-            if (audioBuffer === null) {{
-                return 0;
-            }}
-
-            if (isPlaying) {{
-                return (audioContext.currentTime - startedAt) % audioBuffer.duration;
-            }}
-
-            return pausedAt;
+            return audioPlayer.currentTime || 0;
         }}
 
         function formatTime(seconds) {{
@@ -421,19 +405,11 @@ def show_animated_timeline(
                 // In that case, autoplay-after-rerun cannot be tracked reliably.
                 console.warn("Could not save playback intent.", error);
             }}
+
         }}
 
         async function playLoop(saveIntent = true) {{
-            await audioContext.resume();
-            const buffer = await loadAudioBuffer();
-
-            source = audioContext.createBufferSource();
-            source.buffer = buffer;
-            source.loop = true;
-            source.connect(audioContext.destination);
-            source.start(0, pausedAt);
-
-            startedAt = audioContext.currentTime - pausedAt;
+            await audioPlayer.play();
             isPlaying = true;
             playButton.textContent = "Pause";
             if (saveIntent) {{
@@ -443,13 +419,7 @@ def show_animated_timeline(
         }}
 
         function pauseLoop(saveIntent = true) {{
-            if (source !== null) {{
-                source.stop();
-                source.disconnect();
-                source = null;
-            }}
-
-            pausedAt = getPlaybackTime();
+            audioPlayer.pause();
             isPlaying = false;
             playButton.textContent = "Play";
             if (saveIntent) {{
@@ -469,8 +439,18 @@ def show_animated_timeline(
 
         updateTimeline();
 
+        const parentPlaybackIntent = getParentPlaybackIntent();
+        const shouldAutoplay = (
+            parentPlaybackIntent === "play"
+            || (
+                parentPlaybackIntent !== "pause"
+                && playbackIntentFromPython !== "pause"
+                && shouldAutoplayFromPython
+            )
+        );
+
         if (shouldAutoplay) {{
-            // Browsers may block Web Audio autoplay after Streamlit reruns because
+            // Browsers may block autoplay after Streamlit reruns because
             // the rerun is no longer inside the original user click gesture.
             // If that happens, the user can press Play again and autoplay intent
             // will continue from future user-approved playback.
@@ -501,6 +481,7 @@ def show_polyrhythm_clock(
     muted_tambourine_beats=None,
     muted_hihat_beats=None,
     should_autoplay=False,
+    playback_intent="",
 ):
     """Draw a clock-style rhythm visual with a rotating playhead."""
     if muted_high_beats is None:
@@ -898,6 +879,12 @@ def show_polyrhythm_clock(
         <div class="loop-note">
             Press Play To Hear The Rhythm And Watch The Hand Rotate Through The Measure.
         </div>
+        <audio
+            id="rhythm-audio"
+            src="data:audio/wav;base64,{audio_base64}"
+            loop
+            preload="auto"
+        ></audio>
         <div class="audio-controls">
             <div class="playback-controls">
                 <button class="play-button" id="play-button">Play</button>
@@ -916,47 +903,24 @@ def show_polyrhythm_clock(
         const ticks = document.querySelectorAll(".division-tick");
         const playButton = document.getElementById("play-button");
         const timeLabel = document.getElementById("time-label");
+        const audioPlayer = document.getElementById("rhythm-audio");
         const measureSeconds = {measure_seconds};
-        const audioBase64 = "{audio_base64}";
-        const shouldAutoplay = {str(should_autoplay).lower()};
-        const audioContext = new AudioContext();
-        let audioBuffer = null;
-        let source = null;
+        const shouldAutoplayFromPython = {str(should_autoplay).lower()};
+        const playbackIntentFromPython = "{playback_intent}";
         let isPlaying = false;
-        let startedAt = 0;
-        let pausedAt = 0;
         let animationFrameId = null;
 
-        function base64ToArrayBuffer(base64) {{
-            const binaryString = window.atob(base64);
-            const bytes = new Uint8Array(binaryString.length);
-
-            for (let i = 0; i < binaryString.length; i++) {{
-                bytes[i] = binaryString.charCodeAt(i);
+        function getParentPlaybackIntent() {{
+            try {{
+                const parentUrl = new URL(window.parent.location.href);
+                return parentUrl.searchParams.get("playback_intent") || "";
+            }} catch (error) {{
+                return "";
             }}
-
-            return bytes.buffer;
-        }}
-
-        async function loadAudioBuffer() {{
-            if (audioBuffer === null) {{
-                const audioData = base64ToArrayBuffer(audioBase64);
-                audioBuffer = await audioContext.decodeAudioData(audioData);
-            }}
-
-            return audioBuffer;
         }}
 
         function getPlaybackTime() {{
-            if (audioBuffer === null) {{
-                return 0;
-            }}
-
-            if (isPlaying) {{
-                return (audioContext.currentTime - startedAt) % audioBuffer.duration;
-            }}
-
-            return pausedAt;
+            return audioPlayer.currentTime || 0;
         }}
 
         function formatTime(seconds) {{
@@ -1008,19 +972,11 @@ def show_polyrhythm_clock(
                 // In that case, autoplay-after-rerun cannot be tracked reliably.
                 console.warn("Could not save playback intent.", error);
             }}
+
         }}
 
         async function playLoop(saveIntent = true) {{
-            await audioContext.resume();
-            const buffer = await loadAudioBuffer();
-
-            source = audioContext.createBufferSource();
-            source.buffer = buffer;
-            source.loop = true;
-            source.connect(audioContext.destination);
-            source.start(0, pausedAt);
-
-            startedAt = audioContext.currentTime - pausedAt;
+            await audioPlayer.play();
             isPlaying = true;
             playButton.textContent = "Pause";
             if (saveIntent) {{
@@ -1030,13 +986,7 @@ def show_polyrhythm_clock(
         }}
 
         function pauseLoop(saveIntent = true) {{
-            if (source !== null) {{
-                source.stop();
-                source.disconnect();
-                source = null;
-            }}
-
-            pausedAt = getPlaybackTime();
+            audioPlayer.pause();
             isPlaying = false;
             playButton.textContent = "Play";
             if (saveIntent) {{
@@ -1056,8 +1006,18 @@ def show_polyrhythm_clock(
 
         updateClock();
 
+        const parentPlaybackIntent = getParentPlaybackIntent();
+        const shouldAutoplay = (
+            parentPlaybackIntent === "play"
+            || (
+                parentPlaybackIntent !== "pause"
+                && playbackIntentFromPython !== "pause"
+                && shouldAutoplayFromPython
+            )
+        );
+
         if (shouldAutoplay) {{
-            // Browsers may block Web Audio autoplay after Streamlit reruns because
+            // Browsers may block autoplay after Streamlit reruns because
             // the rerun is no longer inside the original user click gesture.
             // If that happens, the user can press Play again and autoplay intent
             // will continue from future user-approved playback.
