@@ -19,6 +19,10 @@ def show_animated_timeline(
     subdivision_count=0,
     muted_high_beats=None,
     muted_low_beats=None,
+    tambourine_beats=None,
+    hihat_beats=None,
+    muted_tambourine_beats=None,
+    muted_hihat_beats=None,
     should_autoplay=False,
 ):
     """Draw an animated timeline with a playhead synced to the audio player."""
@@ -28,9 +32,40 @@ def show_animated_timeline(
     if muted_low_beats is None:
         muted_low_beats = [False] * low_beats
 
+    if tambourine_beats is not None and muted_tambourine_beats is None:
+        muted_tambourine_beats = [False] * tambourine_beats
+
+    if hihat_beats is not None and muted_hihat_beats is None:
+        muted_hihat_beats = [False] * hihat_beats
+
     high_markers = get_beat_marker_positions(high_beats, beats_per_measure)
     low_markers = get_beat_marker_positions(low_beats, beats_per_measure)
     audio_base64 = get_audio_base64(audio_bytes)
+
+    rhythm_rows = [
+        ("High", "high", high_markers, muted_high_beats),
+        ("Low", "low", low_markers, muted_low_beats),
+    ]
+
+    if tambourine_beats is not None:
+        rhythm_rows.append(
+            (
+                "Tambourine",
+                "tambourine",
+                get_beat_marker_positions(tambourine_beats, beats_per_measure),
+                muted_tambourine_beats,
+            )
+        )
+
+    if hihat_beats is not None:
+        rhythm_rows.append(
+            (
+                "Open Hi-Hat",
+                "hihat",
+                get_beat_marker_positions(hihat_beats, beats_per_measure),
+                muted_hihat_beats,
+            )
+        )
 
     def marker_html(positions, row_name, muted_beats):
         html = ""
@@ -50,6 +85,19 @@ def show_animated_timeline(
             """
 
         return html
+
+    timeline_height = 60 * len(rhythm_rows) + 60
+    timeline_component_height = timeline_height + 140
+    row_html = ""
+
+    for row_index, (label, row_name, positions, muted_beats) in enumerate(rhythm_rows):
+        row_top = 58 + row_index * 60
+        row_html += f"""
+            <div class="row-label" style="top: {row_top}px;">{label}</div>
+            <div class="rhythm-row" style="top: {row_top}px;">
+                {marker_html(positions, row_name, muted_beats)}
+            </div>
+        """
 
     subdivision_lines_html = """
             <span class="subdivision-line downbeat-line" style="left: 0%;"></span>
@@ -85,7 +133,7 @@ def show_animated_timeline(
 
         .timeline {{
             position: relative;
-            height: 180px;
+            height: {timeline_height}px;
             border: 1px solid #dddddd;
             border-radius: 8px;
             background: #ffffff;
@@ -126,14 +174,6 @@ def show_animated_timeline(
             border-top: 1px solid #999999;
         }}
 
-        .high-row {{
-            top: 58px;
-        }}
-
-        .low-row {{
-            top: 118px;
-        }}
-
         .row-label {{
             position: absolute;
             left: 16px;
@@ -142,14 +182,6 @@ def show_animated_timeline(
             line-height: 20px;
             color: #333333;
             transform: translateY(-50%);
-        }}
-
-        .high-label {{
-            top: 58px;
-        }}
-
-        .low-label {{
-            top: 118px;
         }}
 
         .beat-marker {{
@@ -172,8 +204,18 @@ def show_animated_timeline(
             background: #C44536;
         }}
 
+        .tambourine {{
+            background: #D6A21A;
+        }}
+
+        .hihat {{
+            background: #2EA44F;
+        }}
+
         .muted-marker.high,
-        .muted-marker.low {{
+        .muted-marker.low,
+        .muted-marker.tambourine,
+        .muted-marker.hihat {{
             background: #ffffff;
             border-color: #9a9a9a;
             opacity: 0.75;
@@ -259,14 +301,7 @@ def show_animated_timeline(
             <div class="subdivision-layer">
                 {subdivision_lines_html}
             </div>
-            <div class="row-label high-label">High</div>
-            <div class="row-label low-label">Low</div>
-            <div class="rhythm-row high-row">
-                {marker_html(high_markers, "high", muted_high_beats)}
-            </div>
-            <div class="rhythm-row low-row">
-                {marker_html(low_markers, "low", muted_low_beats)}
-            </div>
+            {row_html}
             <div class="playhead"></div>
         </div>
         <div class="loop-note">
@@ -449,7 +484,7 @@ def show_animated_timeline(
     </script>
     """
 
-    components.html(html, height=320)
+    components.html(html, height=timeline_component_height)
 
 
 def show_polyrhythm_clock(
@@ -461,6 +496,10 @@ def show_polyrhythm_clock(
     subdivision_count=0,
     muted_high_beats=None,
     muted_low_beats=None,
+    tambourine_beats=None,
+    hihat_beats=None,
+    muted_tambourine_beats=None,
+    muted_hihat_beats=None,
     should_autoplay=False,
 ):
     """Draw a clock-style rhythm visual with a rotating playhead."""
@@ -470,12 +509,21 @@ def show_polyrhythm_clock(
     if muted_low_beats is None:
         muted_low_beats = [False] * low_beats
 
+    if tambourine_beats is not None and muted_tambourine_beats is None:
+        muted_tambourine_beats = [False] * tambourine_beats
+
+    if hihat_beats is not None and muted_hihat_beats is None:
+        muted_hihat_beats = [False] * hihat_beats
+
     audio_base64 = get_audio_base64(audio_bytes)
+
+    clock_center = 150
+    clock_outer_radius = 134
 
     def clock_point(angle_degrees, radius):
         angle_radians = math.radians(angle_degrees - 90)
-        x = 150 + math.cos(angle_radians) * radius
-        y = 150 + math.sin(angle_radians) * radius
+        x = clock_center + math.cos(angle_radians) * radius
+        y = clock_center + math.sin(angle_radians) * radius
 
         return x, y
 
@@ -513,7 +561,7 @@ def show_polyrhythm_clock(
 
         return lines
 
-    def subdivision_lines(number_of_subdivisions):
+    def subdivision_lines(number_of_subdivisions, outer_radius):
         lines = ""
 
         if number_of_subdivisions == 0:
@@ -522,7 +570,7 @@ def show_polyrhythm_clock(
         for i in range(number_of_subdivisions):
             angle = i * 360 / number_of_subdivisions
             x1, y1 = clock_point(angle, 30)
-            x2, y2 = clock_point(angle, 128)
+            x2, y2 = clock_point(angle, outer_radius)
             downbeat_class = " downbeat-subdivision" if i == 0 else ""
 
             lines += f"""
@@ -537,23 +585,110 @@ def show_polyrhythm_clock(
 
         return lines
 
-    high_lines = division_lines(
-        high_beats,
-        "#006DFF",
-        "high-clock",
-        30,
-        68,
-        muted_high_beats,
-    )
-    low_lines = division_lines(
-        low_beats,
-        "#E00000",
-        "low-clock",
-        88,
-        128,
-        muted_low_beats,
-    )
-    subdivision_ticks = subdivision_lines(subdivision_count)
+    rhythm_tracks = [
+        {
+            "beats": high_beats,
+            "color": "#006DFF",
+            "name": "high-clock",
+            "muted_beats": muted_high_beats,
+            "legend_class": "blue",
+            "legend_text": "Blue Inner Ring = High Rhythm",
+        },
+        {
+            "beats": low_beats,
+            "color": "#E00000",
+            "name": "low-clock",
+            "muted_beats": muted_low_beats,
+            "legend_class": "red",
+            "legend_text": "Red Outer Ring = Low Rhythm",
+        },
+    ]
+
+    if tambourine_beats is not None:
+        rhythm_tracks.append(
+            {
+                "beats": tambourine_beats,
+                "color": "#D6A21A",
+                "name": "tambourine-clock",
+                "muted_beats": muted_tambourine_beats,
+                "legend_class": "yellow",
+                "legend_text": "Yellow Ring = Tambourine",
+            }
+        )
+
+    if hihat_beats is not None:
+        rhythm_tracks.append(
+            {
+                "beats": hihat_beats,
+                "color": "#2EA44F",
+                "name": "hihat-clock",
+                "muted_beats": muted_hihat_beats,
+                "legend_class": "green",
+                "legend_text": "Green Ring = Open Hi-Hat",
+            }
+        )
+
+    ring_count = len(rhythm_tracks)
+    tick_inset = 8
+
+    if ring_count == 2:
+        ring_boundaries = [78, clock_outer_radius]
+    elif ring_count == 3:
+        ring_boundaries = [60, 98, clock_outer_radius]
+    else:
+        ring_boundaries = [50, 78, 106, clock_outer_radius]
+
+    ring_circles = ""
+    rhythm_rings = []
+    previous_boundary = 20
+
+    for ring_index, track in enumerate(rhythm_tracks):
+        boundary_radius = ring_boundaries[ring_index]
+
+        if ring_count == 2 and ring_index == 0:
+            track["inner_radius"] = 30
+            track["outer_radius"] = 68
+        elif ring_count == 2 and ring_index == 1:
+            track["inner_radius"] = 88
+            track["outer_radius"] = 128
+        else:
+            track["inner_radius"] = previous_boundary + tick_inset
+            track["outer_radius"] = boundary_radius - tick_inset
+
+        track["ring_label"] = f"Ring {ring_index + 1}"
+        rhythm_rings.append(track)
+        previous_boundary = boundary_radius
+
+        ring_circles += f"""
+                <circle
+                    cx="{clock_center}"
+                    cy="{clock_center}"
+                    r="{boundary_radius:.2f}"
+                    fill="none"
+                    stroke="#8f8f8f"
+                    stroke-width="2"
+                />
+        """
+
+    rhythm_lines = ""
+    legend_items = """
+                <div class="legend-item"><span class="legend-swatch black"></span> Black Hand = Measure Position</div>
+    """
+
+    for ring in rhythm_rings:
+        rhythm_lines += division_lines(
+            ring["beats"],
+            ring["color"],
+            ring["name"],
+            ring["inner_radius"],
+            ring["outer_radius"],
+            ring["muted_beats"],
+        )
+        legend_items += f"""
+                <div class="legend-item"><span class="legend-swatch {ring["legend_class"]}"></span> {ring["legend_text"]}</div>
+        """
+
+    subdivision_ticks = subdivision_lines(subdivision_count, clock_outer_radius - 6)
 
     html = f"""
     <style>
@@ -674,6 +809,14 @@ def show_polyrhythm_clock(
             background: #006DFF;
         }}
 
+        .yellow {{
+            background: #D6A21A;
+        }}
+
+        .green {{
+            background: #2EA44F;
+        }}
+
         .loop-note {{
             color: #cfcfcf;
             font-size: 13px;
@@ -739,10 +882,9 @@ def show_polyrhythm_clock(
         <div class="clock-panel">
             <svg class="clock-face" viewBox="0 0 300 300" aria-label="Polyrhythm Clock">
                 <circle cx="150" cy="150" r="134" fill="#ffffff" stroke="#8f8f8f" stroke-width="2" />
-                <circle cx="150" cy="150" r="78" fill="none" stroke="#8f8f8f" stroke-width="2" />
+                {ring_circles}
                 {subdivision_ticks}
-                {high_lines}
-                {low_lines}
+                {rhythm_lines}
                 <g id="clock-hand" class="clock-hand">
                     <line class="clock-hand-line" x1="150" y1="150" x2="150" y2="26" />
                     <rect class="clock-hand-tip" x="145" y="21" width="10" height="10" />
@@ -750,9 +892,7 @@ def show_polyrhythm_clock(
                 <circle class="clock-center" cx="150" cy="150" r="12" />
             </svg>
             <div class="clock-legend">
-                <div class="legend-item"><span class="legend-swatch black"></span> Black Hand = Measure Position</div>
-                <div class="legend-item"><span class="legend-swatch blue"></span> Blue Inner Ring = High Rhythm</div>
-                <div class="legend-item"><span class="legend-swatch red"></span> Red Outer Ring = Low Rhythm</div>
+                {legend_items}
             </div>
         </div>
         <div class="loop-note">

@@ -30,15 +30,24 @@ if "tempo_bpm" not in st.session_state:
 if "autoplay_after_play" not in st.session_state:
     st.session_state["autoplay_after_play"] = False
 
+if "has_started_playback" not in st.session_state:
+    st.session_state["has_started_playback"] = False
+
 playback_intent = st.query_params.get("playback_intent")
 
 if isinstance(playback_intent, list):
     playback_intent = playback_intent[0]
 
 if playback_intent == "play":
+    st.session_state["has_started_playback"] = True
     st.session_state["autoplay_after_play"] = True
 elif playback_intent == "pause":
     st.session_state["autoplay_after_play"] = False
+
+should_autoplay_audio = (
+    st.session_state["has_started_playback"]
+    and st.session_state["autoplay_after_play"]
+)
 
 tempo_percent = (
     (st.session_state["tempo_bpm"] - MIN_BPM)
@@ -205,11 +214,26 @@ def toggle_beat_mute(state_key, beat_index):
     )
 
 
-def reset_all_mutes(high_beat_count, low_beat_count):
+def reset_all_mutes(
+    high_beat_count,
+    low_beat_count,
+    tambourine_beat_count=None,
+    hihat_beat_count=None,
+):
     st.session_state["muted_high_beats"] = [False] * high_beat_count
     st.session_state["muted_low_beats"] = [False] * low_beat_count
     st.session_state[get_mute_pills_key("muted_high_beats", high_beat_count)] = []
     st.session_state[get_mute_pills_key("muted_low_beats", low_beat_count)] = []
+
+    if tambourine_beat_count is not None:
+        st.session_state["muted_tambourine_beats"] = [False] * tambourine_beat_count
+        st.session_state[
+            get_mute_pills_key("muted_tambourine_beats", tambourine_beat_count)
+        ] = []
+
+    if hihat_beat_count is not None:
+        st.session_state["muted_hihat_beats"] = [False] * hihat_beat_count
+        st.session_state[get_mute_pills_key("muted_hihat_beats", hihat_beat_count)] = []
 
 
 def get_mute_pills_key(state_key, beat_count):
@@ -324,6 +348,27 @@ low_beats = st.number_input(
     max_value=MAX_BEATS,
     value=3,
 )
+use_tambourine = st.checkbox("Add Tambourine Track", value=False)
+tambourine_beats = None
+
+if use_tambourine:
+    tambourine_beats = st.number_input(
+        "Tambourine Beats",
+        min_value=1,
+        max_value=MAX_BEATS,
+        value=4,
+    )
+
+use_hihat = st.checkbox("Add Open Hi-Hat Track", value=False)
+hihat_beats = None
+
+if use_hihat:
+    hihat_beats = st.number_input(
+        "Open Hi-Hat Beats",
+        min_value=1,
+        max_value=MAX_BEATS,
+        value=5,
+    )
 visualization = st.selectbox(
     "Visualization",
     ["Horizontal Timeline", "Polyrhythm Clock"],
@@ -347,8 +392,33 @@ reset_mutes_when_beat_count_changes(
 sync_mute_state_from_pills("muted_high_beats")
 sync_mute_state_from_pills("muted_low_beats")
 
-has_muted_beats = any(st.session_state["muted_high_beats"]) or any(
-    st.session_state["muted_low_beats"]
+if use_tambourine:
+    reset_mutes_when_beat_count_changes(
+        "muted_tambourine_beats",
+        "previous_tambourine_beat_count",
+        tambourine_beats,
+    )
+    sync_mute_state_from_pills("muted_tambourine_beats")
+
+if use_hihat:
+    reset_mutes_when_beat_count_changes(
+        "muted_hihat_beats",
+        "previous_hihat_beat_count",
+        hihat_beats,
+    )
+    sync_mute_state_from_pills("muted_hihat_beats")
+
+has_muted_beats = (
+    any(st.session_state["muted_high_beats"])
+    or any(st.session_state["muted_low_beats"])
+    or (
+        use_tambourine
+        and any(st.session_state["muted_tambourine_beats"])
+    )
+    or (
+        use_hihat
+        and any(st.session_state["muted_hihat_beats"])
+    )
 )
 with st.expander("Beat Mutes", expanded=False):
     st.button(
@@ -356,7 +426,7 @@ with st.expander("Beat Mutes", expanded=False):
         disabled=not has_muted_beats,
         use_container_width=True,
         on_click=reset_all_mutes,
-        args=(high_beats, low_beats),
+        args=(high_beats, low_beats, tambourine_beats, hihat_beats),
     )
     st.caption("Select beat numbers to mute them.")
     show_beat_mute_pills(
@@ -369,6 +439,19 @@ with st.expander("Beat Mutes", expanded=False):
         "muted_low_beats",
         "🔴",
     )
+    if use_tambourine:
+        show_beat_mute_pills(
+            "Tambourine Beats",
+            "muted_tambourine_beats",
+            "🟡",
+        )
+
+    if use_hihat:
+        show_beat_mute_pills(
+            "Open Hi-Hat Beats",
+            "muted_hihat_beats",
+            "🟢",
+        )
 
 measure_seconds = get_measure_seconds(bpm, "Quarter", BEATS_PER_MEASURE)
 audio_bytes = generate_polyrhythm_audio(
@@ -378,6 +461,18 @@ audio_bytes = generate_polyrhythm_audio(
     LOOPS,
     st.session_state["muted_high_beats"],
     st.session_state["muted_low_beats"],
+    tambourine_beats=tambourine_beats,
+    hihat_beats=hihat_beats,
+    muted_tambourine_beats=(
+        st.session_state["muted_tambourine_beats"]
+        if use_tambourine
+        else None
+    ),
+    muted_hihat_beats=(
+        st.session_state["muted_hihat_beats"]
+        if use_hihat
+        else None
+    ),
 )
 
 if visualization == "Horizontal Timeline":
@@ -390,7 +485,19 @@ if visualization == "Horizontal Timeline":
         SUBDIVISION_OPTIONS[subdivision_guides],
         st.session_state["muted_high_beats"],
         st.session_state["muted_low_beats"],
-        should_autoplay=st.session_state["autoplay_after_play"],
+        tambourine_beats=tambourine_beats,
+        hihat_beats=hihat_beats,
+        muted_tambourine_beats=(
+            st.session_state["muted_tambourine_beats"]
+            if use_tambourine
+            else None
+        ),
+        muted_hihat_beats=(
+            st.session_state["muted_hihat_beats"]
+            if use_hihat
+            else None
+        ),
+        should_autoplay=should_autoplay_audio,
     )
 else:
     show_polyrhythm_clock(
@@ -402,5 +509,17 @@ else:
         SUBDIVISION_OPTIONS[subdivision_guides],
         st.session_state["muted_high_beats"],
         st.session_state["muted_low_beats"],
-        should_autoplay=st.session_state["autoplay_after_play"],
+        tambourine_beats=tambourine_beats,
+        hihat_beats=hihat_beats,
+        muted_tambourine_beats=(
+            st.session_state["muted_tambourine_beats"]
+            if use_tambourine
+            else None
+        ),
+        muted_hihat_beats=(
+            st.session_state["muted_hihat_beats"]
+            if use_hihat
+            else None
+        ),
+        should_autoplay=should_autoplay_audio,
     )

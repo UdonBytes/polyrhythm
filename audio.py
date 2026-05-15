@@ -26,9 +26,24 @@ def make_mono(sound):
     return sound
 
 
-def load_sample(file_name):
+def resample_sound(sound, original_sample_rate, target_sample_rate):
+    """Match a sample to the app's output sample rate."""
+    if original_sample_rate == target_sample_rate:
+        return sound
+
+    original_positions = np.arange(len(sound))
+    new_length = int(len(sound) * target_sample_rate / original_sample_rate)
+    new_positions = np.linspace(0, len(sound) - 1, new_length)
+
+    return np.interp(new_positions, original_positions, sound)
+
+
+def load_sample(file_name, target_sample_rate=SAMPLE_RATE):
     sound, sample_rate = sf.read(file_name)
-    return make_mono(sound), sample_rate
+    sound = make_mono(sound)
+    sound = resample_sound(sound, sample_rate, target_sample_rate)
+
+    return sound
 
 
 def generate_polyrhythm_audio(
@@ -38,6 +53,10 @@ def generate_polyrhythm_audio(
     loops,
     muted_high_beats=None,
     muted_low_beats=None,
+    tambourine_beats=None,
+    hihat_beats=None,
+    muted_tambourine_beats=None,
+    muted_hihat_beats=None,
     sample_rate=SAMPLE_RATE,
 ):
     """Create the polyrhythm audio and return WAV bytes."""
@@ -47,19 +66,46 @@ def generate_polyrhythm_audio(
     if muted_low_beats is None:
         muted_low_beats = [False] * low_beats
 
+    if tambourine_beats is not None and muted_tambourine_beats is None:
+        muted_tambourine_beats = [False] * tambourine_beats
+
+    if hihat_beats is not None and muted_hihat_beats is None:
+        muted_hihat_beats = [False] * hihat_beats
+
     total_seconds = measure_seconds * loops
     track = np.zeros(int(sample_rate * total_seconds))
 
-    woodblock_high, sr1 = load_sample("woodblock_high.wav")
-    woodblock_low, sr2 = load_sample("woodblock_low.wav")
-    downbeat, sr3 = load_sample("downbeat.wav")
+    woodblock_high = load_sample("woodblock_high.wav", sample_rate)
+    woodblock_low = load_sample("woodblock_low.wav", sample_rate)
+    tambourine = None
+    hihat = None
+
+    if tambourine_beats is not None:
+        tambourine = load_sample("tambourine.wav", sample_rate)
+        tambourine = tambourine * 3.0
+
+    if hihat_beats is not None:
+        hihat = load_sample("hihat_open.wav", sample_rate)
+
+    downbeat = load_sample("downbeat.wav", sample_rate)
 
     downbeat = downbeat * 10
 
     for measure in range(loops):
         measure_start = measure * measure_seconds
 
-        if not muted_high_beats[0] or not muted_low_beats[0]:
+        if (
+            not muted_high_beats[0]
+            or not muted_low_beats[0]
+            or (
+                muted_tambourine_beats is not None
+                and not muted_tambourine_beats[0]
+            )
+            or (
+                muted_hihat_beats is not None
+                and not muted_hihat_beats[0]
+            )
+        ):
             add_sound(track, downbeat, measure_start, sample_rate)
 
         for i in range(high_beats):
@@ -75,6 +121,22 @@ def generate_polyrhythm_audio(
 
             time = measure_start + i * measure_seconds / low_beats
             add_sound(track, woodblock_low, time, sample_rate)
+
+        if tambourine_beats is not None:
+            for i in range(tambourine_beats):
+                if muted_tambourine_beats[i]:
+                    continue
+
+                time = measure_start + i * measure_seconds / tambourine_beats
+                add_sound(track, tambourine, time, sample_rate)
+
+        if hihat_beats is not None:
+            for i in range(hihat_beats):
+                if muted_hihat_beats[i]:
+                    continue
+
+                time = measure_start + i * measure_seconds / hihat_beats
+                add_sound(track, hihat, time, sample_rate)
 
     max_volume = np.max(np.abs(track))
 
