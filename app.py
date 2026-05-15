@@ -379,21 +379,7 @@ use_tambourine = st.session_state["extra_track_count"] >= 1
 use_hihat = st.session_state["extra_track_count"] >= 2
 tambourine_beats = None
 hihat_beats = None
-track_columns = [1, 1]
-
-if use_tambourine:
-    track_columns.append(1)
-
-if use_hihat:
-    track_columns.append(1)
-
-if st.session_state["extra_track_count"] < 2:
-    track_columns.append(0.75)
-
-if st.session_state["extra_track_count"] > 0:
-    track_columns.append(0.75)
-
-columns = st.columns(track_columns)
+columns = st.columns(4)
 high_beats = columns[0].number_input(
     "High Woodblock Beats",
     min_value=1,
@@ -406,44 +392,33 @@ low_beats = columns[1].number_input(
     max_value=MAX_BEATS,
     value=3,
 )
-next_column_index = 2
 
 if use_tambourine:
-    tambourine_beats = columns[next_column_index].number_input(
+    tambourine_beats = columns[2].number_input(
         "Tambourine Beats",
         min_value=1,
         max_value=MAX_BEATS,
         value=4,
     )
-    next_column_index += 1
 
 if use_hihat:
-    hihat_beats = columns[next_column_index].number_input(
+    hihat_beats = columns[3].number_input(
         "Open Hi-Hat Beats",
         min_value=1,
         max_value=MAX_BEATS,
         value=5,
     )
-    next_column_index += 1
 
+track_button_columns = st.columns(2)
 if st.session_state["extra_track_count"] < 2:
-    columns[next_column_index].markdown(
-        "<div style='height: 1.75rem'></div>",
-        unsafe_allow_html=True,
-    )
-    columns[next_column_index].button(
+    track_button_columns[0].button(
         "+ Add More",
         on_click=add_extra_track,
         use_container_width=True,
     )
-    next_column_index += 1
 
 if st.session_state["extra_track_count"] > 0:
-    columns[next_column_index].markdown(
-        "<div style='height: 1.75rem'></div>",
-        unsafe_allow_html=True,
-    )
-    columns[next_column_index].button(
+    track_button_columns[1].button(
         "- Remove",
         on_click=remove_extra_track,
         use_container_width=True,

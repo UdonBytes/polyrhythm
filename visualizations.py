@@ -143,7 +143,7 @@ def show_animated_timeline(
 
         .subdivision-layer {{
             position: absolute;
-            left: 90px;
+            left: 110px;
             right: 24px;
             top: 24px;
             bottom: 24px;
@@ -169,7 +169,7 @@ def show_animated_timeline(
 
         .rhythm-row {{
             position: absolute;
-            left: 90px;
+            left: 110px;
             right: 24px;
             height: 50px;
             border-top: 1px solid #999999;
@@ -177,12 +177,14 @@ def show_animated_timeline(
 
         .row-label {{
             position: absolute;
-            left: 16px;
-            width: 64px;
-            font-size: 13px;
-            line-height: 20px;
+            left: 4px;
+            width: 72px;
+            font-size: 12px;
+            line-height: 16px;
             color: #333333;
             transform: translateY(-50%);
+            text-align: right;
+            overflow-wrap: break-word;
         }}
 
         .beat-marker {{
@@ -238,7 +240,7 @@ def show_animated_timeline(
             position: absolute;
             top: 20px;
             bottom: 20px;
-            left: 90px;
+            left: 110px;
             width: 3px;
             background: #111111;
             transform: translateX(-50%);
@@ -366,7 +368,7 @@ def show_animated_timeline(
             const measureTime = playbackTime % measureSeconds;
             const measurePercent = measureTime / measureSeconds;
             const timelineWidth = timeline.clientWidth;
-            const leftEdge = 90;
+            const leftEdge = 110;
             const rightEdge = 24;
             const playableWidth = timelineWidth - leftEdge - rightEdge;
 
