@@ -555,6 +555,7 @@ if visualization == "Horizontal Timeline":
         ),
         should_autoplay=should_autoplay_audio,
         playback_intent=current_playback_intent,
+        loop_seconds=measure_seconds * LOOPS,
     )
 else:
     show_polyrhythm_clock(
@@ -580,4 +581,5 @@ else:
         ),
         should_autoplay=should_autoplay_audio,
         playback_intent=current_playback_intent,
+        loop_seconds=measure_seconds * LOOPS,
     )

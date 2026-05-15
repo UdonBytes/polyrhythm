@@ -25,6 +25,7 @@ def show_animated_timeline(
     muted_hihat_beats=None,
     should_autoplay=False,
     playback_intent="",
+    loop_seconds=None,
 ):
     """Draw an animated timeline with a playhead synced to the audio player."""
     if muted_high_beats is None:
@@ -42,6 +43,8 @@ def show_animated_timeline(
     high_markers = get_beat_marker_positions(high_beats, beats_per_measure)
     low_markers = get_beat_marker_positions(low_beats, beats_per_measure)
     audio_base64 = get_audio_base64(audio_bytes)
+    if loop_seconds is None:
+        loop_seconds = measure_seconds
 
     rhythm_rows = [
         ("High", "high", high_markers, muted_high_beats),
@@ -336,6 +339,7 @@ def show_animated_timeline(
         const playButton = document.getElementById("play-button");
         const timeLabel = document.getElementById("time-label");
         const measureSeconds = {measure_seconds};
+        const loopSeconds = {loop_seconds};
         const audioBase64 = "{audio_base64}";
         const shouldAutoplayFromPython = {str(should_autoplay).lower()};
         const playbackIntentFromPython = "{playback_intent}";
@@ -383,7 +387,7 @@ def show_animated_timeline(
             }}
 
             if (isPlaying) {{
-                return (audioContext.currentTime - startedAt) % audioBuffer.duration;
+                return (audioContext.currentTime - startedAt) % loopSeconds;
             }}
 
             return pausedAt;
@@ -447,7 +451,8 @@ def show_animated_timeline(
         async function playLoop(saveIntent = true) {{
             await audioContext.resume();
             const buffer = await loadAudioBuffer();
-            const startOffset = pausedAt % buffer.duration;
+            const loopEnd = Math.min(loopSeconds, buffer.duration);
+            const startOffset = pausedAt % loopEnd;
 
             if (source !== null) {{
                 source.stop();
@@ -457,6 +462,8 @@ def show_animated_timeline(
             source = audioContext.createBufferSource();
             source.buffer = buffer;
             source.loop = true;
+            source.loopStart = 0;
+            source.loopEnd = loopEnd;
             source.connect(audioContext.destination);
             source.start(0, startOffset);
 
@@ -540,6 +547,7 @@ def show_polyrhythm_clock(
     muted_hihat_beats=None,
     should_autoplay=False,
     playback_intent="",
+    loop_seconds=None,
 ):
     """Draw a clock-style rhythm visual with a rotating playhead."""
     if muted_high_beats is None:
@@ -555,6 +563,8 @@ def show_polyrhythm_clock(
         muted_hihat_beats = [False] * hihat_beats
 
     audio_base64 = get_audio_base64(audio_bytes)
+    if loop_seconds is None:
+        loop_seconds = measure_seconds
 
     clock_center = 150
     clock_outer_radius = 134
@@ -962,6 +972,7 @@ def show_polyrhythm_clock(
         const playButton = document.getElementById("play-button");
         const timeLabel = document.getElementById("time-label");
         const measureSeconds = {measure_seconds};
+        const loopSeconds = {loop_seconds};
         const audioBase64 = "{audio_base64}";
         const shouldAutoplayFromPython = {str(should_autoplay).lower()};
         const playbackIntentFromPython = "{playback_intent}";
@@ -1009,7 +1020,7 @@ def show_polyrhythm_clock(
             }}
 
             if (isPlaying) {{
-                return (audioContext.currentTime - startedAt) % audioBuffer.duration;
+                return (audioContext.currentTime - startedAt) % loopSeconds;
             }}
 
             return pausedAt;
@@ -1070,7 +1081,8 @@ def show_polyrhythm_clock(
         async function playLoop(saveIntent = true) {{
             await audioContext.resume();
             const buffer = await loadAudioBuffer();
-            const startOffset = pausedAt % buffer.duration;
+            const loopEnd = Math.min(loopSeconds, buffer.duration);
+            const startOffset = pausedAt % loopEnd;
 
             if (source !== null) {{
                 source.stop();
@@ -1080,6 +1092,8 @@ def show_polyrhythm_clock(
             source = audioContext.createBufferSource();
             source.buffer = buffer;
             source.loop = true;
+            source.loopStart = 0;
+            source.loopEnd = loopEnd;
             source.connect(audioContext.destination);
             source.start(0, startOffset);
 
