@@ -335,11 +335,17 @@ def show_animated_timeline(
         const markers = document.querySelectorAll(".beat-marker");
         const playButton = document.getElementById("play-button");
         const timeLabel = document.getElementById("time-label");
-        const audioPlayer = document.getElementById("rhythm-audio");
         const measureSeconds = {measure_seconds};
+        const audioBase64 = "{audio_base64}";
         const shouldAutoplayFromPython = {str(should_autoplay).lower()};
         const playbackIntentFromPython = "{playback_intent}";
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContextClass();
+        let audioBuffer = null;
+        let source = null;
         let isPlaying = false;
+        let startedAt = 0;
+        let pausedAt = 0;
         let animationFrameId = null;
 
         function getParentPlaybackIntent() {{
@@ -351,8 +357,36 @@ def show_animated_timeline(
             }}
         }}
 
+        function base64ToArrayBuffer(base64) {{
+            const binaryString = window.atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+
+            for (let i = 0; i < binaryString.length; i++) {{
+                bytes[i] = binaryString.charCodeAt(i);
+            }}
+
+            return bytes.buffer;
+        }}
+
+        async function loadAudioBuffer() {{
+            if (audioBuffer === null) {{
+                const audioData = base64ToArrayBuffer(audioBase64);
+                audioBuffer = await audioContext.decodeAudioData(audioData);
+            }}
+
+            return audioBuffer;
+        }}
+
         function getPlaybackTime() {{
-            return audioPlayer.currentTime || 0;
+            if (audioBuffer === null) {{
+                return pausedAt;
+            }}
+
+            if (isPlaying) {{
+                return (audioContext.currentTime - startedAt) % audioBuffer.duration;
+            }}
+
+            return pausedAt;
         }}
 
         function formatTime(seconds) {{
@@ -411,7 +445,22 @@ def show_animated_timeline(
         }}
 
         async function playLoop(saveIntent = true) {{
-            await audioPlayer.play();
+            await audioContext.resume();
+            const buffer = await loadAudioBuffer();
+            const startOffset = pausedAt % buffer.duration;
+
+            if (source !== null) {{
+                source.stop();
+                source.disconnect();
+            }}
+
+            source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.loop = true;
+            source.connect(audioContext.destination);
+            source.start(0, startOffset);
+
+            startedAt = audioContext.currentTime - startOffset;
             isPlaying = true;
             playButton.textContent = "Pause";
             if (saveIntent) {{
@@ -421,7 +470,14 @@ def show_animated_timeline(
         }}
 
         function pauseLoop(saveIntent = true) {{
-            audioPlayer.pause();
+            pausedAt = getPlaybackTime();
+
+            if (source !== null) {{
+                source.stop();
+                source.disconnect();
+                source = null;
+            }}
+
             isPlaying = false;
             playButton.textContent = "Play";
             if (saveIntent) {{
@@ -905,11 +961,17 @@ def show_polyrhythm_clock(
         const ticks = document.querySelectorAll(".division-tick");
         const playButton = document.getElementById("play-button");
         const timeLabel = document.getElementById("time-label");
-        const audioPlayer = document.getElementById("rhythm-audio");
         const measureSeconds = {measure_seconds};
+        const audioBase64 = "{audio_base64}";
         const shouldAutoplayFromPython = {str(should_autoplay).lower()};
         const playbackIntentFromPython = "{playback_intent}";
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContextClass();
+        let audioBuffer = null;
+        let source = null;
         let isPlaying = false;
+        let startedAt = 0;
+        let pausedAt = 0;
         let animationFrameId = null;
 
         function getParentPlaybackIntent() {{
@@ -921,8 +983,36 @@ def show_polyrhythm_clock(
             }}
         }}
 
+        function base64ToArrayBuffer(base64) {{
+            const binaryString = window.atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+
+            for (let i = 0; i < binaryString.length; i++) {{
+                bytes[i] = binaryString.charCodeAt(i);
+            }}
+
+            return bytes.buffer;
+        }}
+
+        async function loadAudioBuffer() {{
+            if (audioBuffer === null) {{
+                const audioData = base64ToArrayBuffer(audioBase64);
+                audioBuffer = await audioContext.decodeAudioData(audioData);
+            }}
+
+            return audioBuffer;
+        }}
+
         function getPlaybackTime() {{
-            return audioPlayer.currentTime || 0;
+            if (audioBuffer === null) {{
+                return pausedAt;
+            }}
+
+            if (isPlaying) {{
+                return (audioContext.currentTime - startedAt) % audioBuffer.duration;
+            }}
+
+            return pausedAt;
         }}
 
         function formatTime(seconds) {{
@@ -978,7 +1068,22 @@ def show_polyrhythm_clock(
         }}
 
         async function playLoop(saveIntent = true) {{
-            await audioPlayer.play();
+            await audioContext.resume();
+            const buffer = await loadAudioBuffer();
+            const startOffset = pausedAt % buffer.duration;
+
+            if (source !== null) {{
+                source.stop();
+                source.disconnect();
+            }}
+
+            source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.loop = true;
+            source.connect(audioContext.destination);
+            source.start(0, startOffset);
+
+            startedAt = audioContext.currentTime - startOffset;
             isPlaying = true;
             playButton.textContent = "Pause";
             if (saveIntent) {{
@@ -988,7 +1093,14 @@ def show_polyrhythm_clock(
         }}
 
         function pauseLoop(saveIntent = true) {{
-            audioPlayer.pause();
+            pausedAt = getPlaybackTime();
+
+            if (source !== null) {{
+                source.stop();
+                source.disconnect();
+                source = null;
+            }}
+
             isPlaying = false;
             playButton.textContent = "Play";
             if (saveIntent) {{
